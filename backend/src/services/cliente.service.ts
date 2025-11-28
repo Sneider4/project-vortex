@@ -1,49 +1,132 @@
 // src/services/cliente.service.ts
 import { pool } from '../db/pool';
+import { Cliente, ClienteConContratosActivos, ClienteResumen, Contrato, ContratoInput } from '../models/cliente.model';
 
-export interface ClienteResumen {
-    cliente: {
-        id_cliente: number;
-        nombre: string;
-        nit: string | null;
-        sector: string | null;
-        fecha_inicio_relacion: string | null;
-        estado: string;
-    };
-    contratos: {
-        id_contrato: number;
-        nombre_proyecto: string;
-        fecha_inicio: string | null;
-        fecha_fin: string | null;
-        estado: string;
-        nivel_servicio: string | null;
-    }[];
-    resumen: {
-        total_tickets: number;
-        promedio_score_churn: number;
-        riesgo_predominante: string | null;
-        tickets_por_riesgo: { riesgo_churn: string | null; cantidad: number }[];
-    };
-    tickets_recientes: {
-        id_ticket: number;
-        titulo: string;
-        descripcion: string;
-        prioridad: string | null;
-        estado: string;
-        fecha_creacion: string;
-        sentimiento: string | null;
-        frustracion: string | null;
-        score_churn: number | null;
-        riesgo_churn: string | null;
-        es_potencial_phishing: boolean;
-        tiene_datos_sensibles: boolean;
-    }[];
+export async function crearCliente(data: Cliente): Promise<Cliente> {
+    const {
+        nombre,
+        nit,
+        sector,
+        fecha_inicio_relacion,
+        estado
+    } = data;
+
+    const query = `
+    INSERT INTO clientes (
+        nombre,
+        nit,
+        sector,
+        fecha_inicio_relacion,
+        estado
+    )
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING
+        id_cliente,
+        nombre,
+        nit,
+        sector,
+        fecha_inicio_relacion,
+        estado
+    `;
+
+    const values = [
+        nombre,
+        nit,
+        sector ?? null,
+        fecha_inicio_relacion,
+        estado
+    ];
+
+    const result = await pool.query<Cliente>(query, values);
+    return result.rows[0];
 }
 
-export async function getClienteResumen(
-    idCliente: number
-): Promise<ClienteResumen | null> {
-    // 1️⃣ Datos básicos del cliente
+export async function crearContrato(data: ContratoInput): Promise<Contrato> {
+    const {
+        id_cliente,
+        nombre_proyecto,
+        fecha_inicio,
+        fecha_fin,
+        valor_mensual,
+        estado,
+        nivel_servicio
+    } = data;
+
+    const query = `
+        INSERT INTO contratos (
+            id_cliente,
+            nombre_proyecto,
+            fecha_inicio,
+            fecha_fin,
+            valor_mensual,
+            nivel_servicio
+        )
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING
+            id_contrato,
+            id_cliente,
+            nombre_proyecto,
+            fecha_inicio,
+            fecha_fin,
+            valor_mensual,
+            estado,
+            nivel_servicio
+    `;
+
+    const values = [
+        id_cliente,
+        nombre_proyecto,
+        fecha_inicio,
+        fecha_fin ?? null,
+        valor_mensual,
+        estado,
+        nivel_servicio ?? null
+    ];
+
+    const result = await pool.query<Contrato>(query, values);
+    return result.rows[0];
+}
+
+export async function listarContratos(): Promise<Contrato[]> {
+    const query = `
+        SELECT
+            c.id_contrato,
+            cli.nit AS id_cliente,          -- ⬅️ aquí devolvemos el nit EN VEZ del ID numérico
+            c.nombre_proyecto,
+            c.fecha_inicio,
+            c.fecha_fin,
+            c.valor_mensual,
+            c.estado,
+            c.nivel_servicio
+        FROM contratos c
+        INNER JOIN clientes cli ON cli.id_cliente = c.id_cliente
+        ORDER BY c.id_contrato DESC;
+            `;
+
+    const result = await pool.query<Contrato>(query);
+    return result.rows;
+}
+
+export async function listarClientes(): Promise<Cliente[]> {
+    const query = `
+        SELECT
+            id_cliente,
+            nombre,
+            nit,
+            sector,
+            fecha_inicio_relacion,
+            estado
+        FROM clientes
+        ORDER BY id_cliente DESC
+    `;
+
+    const result = await pool.query<Cliente>(query);
+    return result.rows;
+}
+
+
+export async function getClienteResumen(idCliente: number): Promise<ClienteResumen | null> {
+    // Datos básicos del cliente
     const clienteQuery = `
         SELECT
             id_cliente,
@@ -72,7 +155,7 @@ export async function getClienteResumen(
         estado: c.estado
     };
 
-    // 2️⃣ Contratos del cliente
+    // Contratos del cliente
     const contratosQuery = `
         SELECT
             id_contrato,
@@ -96,7 +179,7 @@ export async function getClienteResumen(
         nivel_servicio: row.nivel_servicio
     }));
 
-    // 3️⃣ Resumen agregado de tickets + churn
+    // Resumen agregado de tickets + churn
     const resumenQuery = `
         SELECT
             COUNT(t.id_ticket) AS total_tickets,
@@ -133,7 +216,7 @@ export async function getClienteResumen(
         cantidad: Number(row.cantidad)
     }));
 
-    // 4️⃣ Últimos tickets con análisis
+    // Últimos tickets con análisis
     const ticketsRecientesQuery = `
         SELECT
             t.id_ticket,
@@ -187,34 +270,15 @@ export async function getClienteResumen(
     };
 }
 
-export interface ClienteConContratosActivos {
-    cliente: {
-        id_cliente: number;
-        nombre: string;
-        nit: string | null;
-        sector: string | null;
-        fecha_inicio_relacion: string | null;
-        estado: string;
-    };
-    contratos_activos: {
-        id_contrato: number;
-        nombre_proyecto: string;
-        fecha_inicio: string | null;
-        fecha_fin: string | null;
-        estado: string;
-        nivel_servicio: string | null;
-    }[];
-}
 
-export async function getClientePorNitConContratosActivos(
-    nit: string
-): Promise<ClienteConContratosActivos | null> {
+
+export async function getClientePorNitConContratosActivos(nit: string): Promise<ClienteConContratosActivos | null> {
     // 1. Buscar cliente por NIT
     const clienteQuery = `
-    SELECT id_cliente, nombre, nit, sector, fecha_inicio_relacion, estado
-    FROM clientes
-    WHERE nit = $1
-  `;
+        SELECT id_cliente, nombre, nit, sector, fecha_inicio_relacion, estado
+        FROM clientes
+        WHERE nit = $1
+    `;
     const clienteResult = await pool.query(clienteQuery, [nit]);
 
     if (clienteResult.rowCount === 0) {

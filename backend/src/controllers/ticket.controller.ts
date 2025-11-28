@@ -5,7 +5,7 @@ import {
     listTicketsWithAnalysis
 } from '../services/ticket.service';
 
-export async function createTicketHandler(req: Request, res: Response) {
+export async function crearTicketHandler(req: Request, res: Response) {
     try {
         const {
             id_contrato,
@@ -34,7 +34,7 @@ export async function createTicketHandler(req: Request, res: Response) {
     }
 }
 
-export async function listTicketsHandler(_req: Request, res: Response) {
+export async function listadoTicketsHandler(_req: Request, res: Response) {
     try {
         const items = await listTicketsWithAnalysis();
         return res.json({ items });

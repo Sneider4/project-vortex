@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../../services/dashboard.service';
 import { DashboardResumen, RiesgoResumen } from '../../../../models/vortex.model'
 import { RouterLink } from '@angular/router';
+import { catchError, Subscription, tap } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,28 +17,33 @@ export class DashboardComponent implements OnInit {
   loading = false;
   errorMessage = '';
 
-  constructor(private dashboardService: DashboardService) { }
+  private subscriptions: Subscription = new Subscription();
+
+  private dashboardService = inject(DashboardService)
+
+  constructor() { }
 
   ngOnInit(): void {
     this.cargarResumen();
   }
 
   cargarResumen() {
-    this.loading = true;
-    this.errorMessage = '';
-    this.dashboardService.getResumen().subscribe({
-      next: (res) => {
+    const resumen = this.dashboardService.getResumen().pipe(
+      tap((data) => {
         this.loading = false;
-        this.data = res;
-      },
-      error: (err) => {
+        this.data = data;
+      }),
+      catchError((error) => {
         this.loading = false;
-        console.error(err);
+        console.error(error);
         this.errorMessage =
-          err?.error?.message || 'Error al cargar el dashboard';
-      }
-    });
+          error?.error?.message || 'Error al cargar el dashboard';
+        throw error;
+      }),
+    ).subscribe();
+    this.subscriptions.add(resumen);
   }
+
 
   getCantidadPorRiesgo(riesgo: string): number {
     if (!this.data) return 0;

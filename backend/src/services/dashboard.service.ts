@@ -1,28 +1,11 @@
 // src/services/dashboard.service.ts
 import { pool } from '../db/pool';
+import { DashboardResumen, RiesgoResumenRow, TopClienteRow } from '../models/dashboard.modal';
 
-export interface TopClienteRow {
-    id_cliente: number;
-    nombre_cliente: string;
-    total_tickets: number;
-    promedio_score_churn: number;
-    riesgo_predominante: string | null;
-}
 
-export interface RiesgoResumenRow {
-    riesgo_churn: string | null;
-    cantidad: number;
-}
-
-export interface DashboardResumen {
-    top_clientes: TopClienteRow[];
-    resumen_riesgo: RiesgoResumenRow[];
-    total_tickets: number;
-    total_clientes_con_tickets: number;
-}
 
 export async function getDashboardResumen(): Promise<DashboardResumen> {
-    // 1️⃣ Top clientes por score promedio de churn (últimos 30 días)
+    // Top clientes por score promedio de churn (últimos 30 días)
     const topClientesQuery = `
         SELECT
             c.id_cliente,
@@ -51,7 +34,7 @@ export async function getDashboardResumen(): Promise<DashboardResumen> {
         riesgo_predominante: row.riesgo_predominante
     }));
 
-    // 2️⃣ Resumen por riesgo de churn (todos los tickets analizados)
+    // Resumen por riesgo de churn (todos los tickets analizados)
     const resumenRiesgoQuery = `
         SELECT
             a.riesgo_churn,
@@ -67,7 +50,7 @@ export async function getDashboardResumen(): Promise<DashboardResumen> {
         cantidad: Number(row.cantidad)
     }));
 
-    // 3️⃣ Totales globales
+    // Totales globales
     const totalTicketsQuery = `
         SELECT COUNT(*) AS total_tickets FROM tickets;
     `;

@@ -115,3 +115,23 @@ export interface ClienteConContratosActivos {
     nivel_servicio: string | null;
   }[];
 }
+
+export interface Cliente {
+  id_cliente: number;
+  nombre: string;
+  nit: string;
+  sector: string | null;
+  fecha_inicio_relacion: string;
+  estado: string;
+}
+
+export interface Contrato {
+  id_contrato: number;
+  id_cliente: number;
+  nombre_proyecto: string;
+  fecha_inicio: string;
+  fecha_fin: string | null;
+  valor_mensual: string;
+  estado: string;
+  nivel_servicio: string | null;
+}

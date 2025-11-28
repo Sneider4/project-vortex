@@ -1,20 +1,137 @@
-<nav class="navbar">
-  <div class="navbar-left">
-    <span class="logo">Vortex Churn</span>
-  </div>
-  <div class="navbar-right">
-    <a
-      routerLink="/"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
+<!-- Topbar solo móvil para abrir/cerrar el menú (Bootstrap collapse) -->
+<nav class="navbar navbar-light bg-light border-bottom d-lg-none">
+  <div class="container-fluid">
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#sidebarMenu"
+      aria-controls="sidebarMenu"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
     >
-      Dashboard
-    </a>
-    <a [routerLink]="['/nuevo-ticket']" routerLinkActive="active"> Nuevo ticket </a>
-    <a [routerLink]="['/tickets']" routerLinkActive="active"> Tickets </a>
+      ☰
+    </button>
+
+    <span class="navbar-brand mb-0 h1 ms-2"> Vortex Churn </span>
   </div>
 </nav>
 
-<main class="main-container">
-  <router-outlet></router-outlet>
-</main>
+<div class="app-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <!-- SIDEBAR -->
+  <nav id="sidebarMenu" class="collapse d-lg-block bg-light border-end sidebar">
+    <div class="d-flex flex-column min-vh-100">
+      <!-- Logo / título y botón colapsar (solo escritorio) -->
+      <div
+        class="sidebar-header d-none d-lg-flex align-items-center justify-content-between px-3 py-2 border-bottom"
+      >
+        <span class="fs-4 fw-bold sidebar-logo-text">Vortex</span>
+
+        <button
+          type="button"
+          class="btn btn-sm sidebar-toggle-btn py-1 px-2"
+          (click)="toggleSidebar()"
+          [attr.title]="isSidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'"
+        >
+          <i
+            class="bi"
+            [ngClass]="
+              isSidebarCollapsed
+                ? 'bi bi-arrow-bar-right fs-4'
+                : 'bi bi-arrow-bar-left fs-4'
+            "
+          ></i>
+        </button>
+      </div>
+      @if (isSidebarCollapsed) {
+        <!-- Cuando está colapsado, en escritorio mostramos solo el icono del logo -->
+        <div class="sidebar-header-collapsed d-none d-lg-flex align-items-center justify-content-center border-bottom">
+          <span class="fs-5 fw-bold">VTX</span>
+        </div>
+      }
+
+      <!-- Links de navegación -->
+      <ul class="nav nav-pills flex-column mb-auto py-2">
+        <li class="nav-item">
+          <a
+            routerLink="/"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="nav-link custom-link d-flex align-items-center gap-3"
+            [attr.title]="isSidebarCollapsed ? 'Dashboard' : null"
+          >
+            <i class="bi bi-speedometer2 sidebar-icon fs-5"></i>
+            <span class="nav-label">Dashboard</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a
+            [routerLink]="['/nuevo-ticket']"
+            routerLinkActive="active"
+            class="nav-link custom-link d-flex align-items-center gap-3"
+            [attr.title]="isSidebarCollapsed ? 'Nuevo ticket' : null"
+          >
+            <i class="bi bi-plus-circle sidebar-icon fs-5"></i>
+            <span class="nav-label">Nuevo ticket</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a
+            [routerLink]="['/tickets']"
+            routerLinkActive="active"
+            class="nav-link custom-link d-flex align-items-center gap-3"
+            [attr.title]="isSidebarCollapsed ? 'Tickets' : null"
+          >
+            <i class="bi bi-list-check sidebar-icon fs-5"></i>
+            <span class="nav-label">Tickets</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a
+            [routerLink]="['/clientes/nuevo']"
+            routerLinkActive="active"
+            class="nav-link custom-link d-flex align-items-center gap-3"
+            [attr.title]="isSidebarCollapsed ? 'Clientes' : null"
+          >
+            <i class="bi bi-people sidebar-icon fs-5"></i>
+            <span class="nav-label">Clientes</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a
+            [routerLink]="['/contratos/nuevo']"
+            routerLinkActive="active"
+            class="nav-link custom-link d-flex align-items-center gap-3"
+            [attr.title]="isSidebarCollapsed ? 'Contratos' : null"
+          >
+            <i class="bi bi-journal-text sidebar-icon fs-5"></i>
+            <span class="nav-label">Contratos</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Footer del sidebar -->
+      <div class="mt-auto p-3 small text-muted border-top d-none d-lg-block">
+        &copy; {{ currentYear }} Vortex
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="content-wrapper">
+    <!-- Topbar escritorio (opcional) -->
+    <nav class="navbar navbar-light bg-white border-bottom d-none d-lg-block">
+      <div class="container-fluid">
+        <span class="navbar-text"> Panel de análisis </span>
+      </div>
+    </nav>
+
+    <main class="main-container p-3">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

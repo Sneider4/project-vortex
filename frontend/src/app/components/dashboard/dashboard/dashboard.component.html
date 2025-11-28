@@ -1,96 +1,125 @@
-<div class="dashboard-container">
-  <div class="header">
-    <h1>Dashboard de Churn y Soporte</h1>
-    <p class="subtitulo">
-      Visión general del riesgo de churn, tickets analizados y clientes
+<div class="container my-4">
+  <div class="mb-4">
+    <h1 class="mb-1 fw-bold">Dashboard de Tickets y Soporte</h1>
+    <p class="text-muted mb-0">
+      Visión general del riesgo de las solicitudes, tickets analizados y clientes
       críticos.
     </p>
   </div>
 
-  <div *ngIf="loading" class="estado">Cargando dashboard...</div>
-  <div *ngIf="errorMessage" class="estado error">{{ errorMessage }}</div>
-
-  <ng-container *ngIf="!loading && data">
-    <!-- Tarjetas resumen -->
-    <div class="cards">
-      <div class="card">
-        <h3>Total de tickets</h3>
-        <p class="valor">{{ data.total_tickets }}</p>
-        <p class="detalle">Tickets registrados en el sistema.</p>
+  @if (loading) {
+    <div class="alert alert-info">Cargando dashboard...</div>
+  } @if (errorMessage) {
+    <div class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+  } @if (!loading && data) {
+    <div class="row g-3 mb-5">
+      <div class="col-md-4">
+        <div class="card rounded-4 shadow-sm h-100">
+          <div class="card-body px-4">
+            <h3 class="h6 text-uppercase text-muted mb-1">Total de tickets</h3>
+            <p class="display-6 fw-semibold mb-1">{{ data.total_tickets }}</p>
+            <p class="text-muted mb-0">Tickets registrados en el sistema.</p>
+          </div>
+        </div>
       </div>
 
-      <div class="card">
-        <h3>Clientes con tickets</h3>
-        <p class="valor">{{ data.total_clientes_con_tickets }}</p>
-        <p class="detalle">Clientes activos con interacción de soporte.</p>
+      <div class="col-md-4">
+        <div class="card rounded-4 shadow-sm h-100">
+          <div class="card-body px-4">
+            <h3 class="h6 text-uppercase text-muted mb-1">Clientes con tickets</h3>
+            <p class="display-6 fw-semibold mb-1">{{ data.total_clientes_con_tickets }}</p>
+            <p class="text-muted mb-0">Clientes activos con interacción de soporte.</p>
+          </div>
+        </div>
       </div>
 
-      <div class="card">
-        <h3>Riesgo de churn</h3>
-        <ul class="riesgos-lista">
-          <li>
-            <span class="badge badge-alto">ALTO</span>
-            <span class="cantidad">{{ getCantidadPorRiesgo("ALTO") }}</span>
-          </li>
-          <li>
-            <span class="badge badge-medio">MEDIO</span>
-            <span class="cantidad">{{ getCantidadPorRiesgo("MEDIO") }}</span>
-          </li>
-          <li>
-            <span class="badge badge-bajo">BAJO</span>
-            <span class="cantidad">{{ getCantidadPorRiesgo("BAJO") }}</span>
-          </li>
-          <li>
-            <span class="badge badge-nd">N/D</span>
-            <span class="cantidad">{{ getCantidadPorRiesgo("N/D") }}</span>
-          </li>
-        </ul>
-        <p class="detalle">Distribución de tickets según nivel de riesgo.</p>
+      <div class="col-md-4">
+        <div class="card rounded-4 shadow-sm h-100">
+          <div class="card-body px-4">
+            <h3 class="h6 text-uppercase text-muted mb-2">Riesgo de churn</h3>
+            <ul class="list-unstyled mb-0">
+              <li class="d-flex justify-content-between mb-1">
+                <span class="badge text-bg-danger d-flex justify-content-center align-items-center">ALTO</span>
+                <span class="fw-semibold">
+                  {{ getCantidadPorRiesgo("ALTO") }}
+                </span>
+              </li>
+              <li class="d-flex justify-content-between mb-1">
+                <span class="badge text-bg-warning d-flex justify-content-center align-items-center">MEDIO</span>
+                <span class="fw-semibold">
+                  {{ getCantidadPorRiesgo("MEDIO") }}
+                </span>
+              </li>
+              <li class="d-flex justify-content-between mb-1">
+                <span class="badge text-bg-success d-flex justify-content-center align-items-center">BAJO</span>
+                <span class="fw-semibold">
+                  {{ getCantidadPorRiesgo("BAJO") }}
+                </span>
+              </li>
+              <li class="d-flex justify-content-between">
+                <span class="badge text-bg-secondary d-flex justify-content-center align-items-center">N/D</span>
+                <span class="fw-semibold">
+                  {{ getCantidadPorRiesgo("N/D") }}
+                </span>
+              </li>
+            </ul>
+            <p class="text-muted small mb-0 mt-2">
+              Distribución de tickets según nivel de riesgo.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Top clientes en riesgo -->
-    <div class="top-clientes">
-      <h2>Top clientes en riesgo (últimos 30 días)</h2>
+    <div class="mb-3">
+      <h4 class="fw-bold mb-3">Top clientes en riesgo (últimos 30 días)</h4>
 
-      <table *ngIf="data.top_clientes.length > 0">
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Total tickets</th>
-            <th>Score promedio</th>
-            <th>Riesgo predominante</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let c of data.top_clientes">
-            <td>
-              <a [routerLink]="['/clientes', c.id_cliente]">
-                {{ c.nombre_cliente }}
-              </a>
-            </td>
-            <td>{{ c.total_tickets }}</td>
-            <td>{{ c.promedio_score_churn | number : "1.0-1" }}</td>
-            <td>
-              <span
-                class="badge"
-                [ngClass]="{
-                  'badge-alto': c.riesgo_predominante === 'ALTO',
-                  'badge-medio': c.riesgo_predominante === 'MEDIO',
-                  'badge-bajo': c.riesgo_predominante === 'BAJO',
-                  'badge-nd': !c.riesgo_predominante
-                }"
-              >
-                {{ c.riesgo_predominante || "N/D" }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p *ngIf="data.top_clientes.length === 0" class="estado">
+      @if (data.top_clientes.length > 0) {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Cliente</th>
+              <th>Total tickets</th>
+              <th>Score promedio</th>
+              <th>Riesgo predominante</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cliente of data.top_clientes; track cliente.id_cliente) {
+            <tr>
+              <td>
+                <a [routerLink]="['/cliente-detalle', cliente.id_cliente]">
+                  {{ cliente.nombre_cliente }}
+                </a>
+              </td>
+              <td>{{ cliente.total_tickets }}</td>
+              <td>{{ cliente.promedio_score_churn | number : "1.0-1" }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'text-bg-danger': cliente.riesgo_predominante === 'ALTO',
+                    'text-bg-warning': cliente.riesgo_predominante === 'MEDIO',
+                    'text-bg-success': cliente.riesgo_predominante === 'BAJO',
+                    'text-bg-secondary': !cliente.riesgo_predominante
+                  }"
+                >
+                  {{ cliente.riesgo_predominante || "N/D" }}
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } @else {
+      <div class="alert alert-info mb-0">
         Aún no hay suficientes tickets para calcular clientes en riesgo.
-      </p>
+      </div>
+      }
     </div>
-  </ng-container>
+  }
 </div>

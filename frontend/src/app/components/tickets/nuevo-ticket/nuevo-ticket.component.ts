@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TicketService } from '../../../services/ticket.service';
 import { ClienteConContratosActivos, CreateTicketResponse } from '../../../../models/vortex.model';
 import { ClienteService } from '../../../services/cliente.service';
+import { catchError, Subscription, tap } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-nuevo-ticket',
@@ -20,6 +22,8 @@ export class NuevoTicketComponent {
 
   clienteSeleccionado: ClienteConContratosActivos['cliente'] | null = null;
   contratosActivos: ClienteConContratosActivos['contratos_activos'] = [];
+
+  private subscriptions: Subscription = new Subscription();
 
   constructor(
     private fb: FormBuilder,
@@ -47,8 +51,8 @@ export class NuevoTicketComponent {
     }
 
     this.loading = true;
-    this.clienteService.buscarPorNit(nit).subscribe({
-      next: (data) => {
+    const usuario = this.clienteService.buscarPorNit(nit).pipe(
+      tap((data) => {
         this.loading = false;
         this.clienteSeleccionado = data.cliente;
         this.contratosActivos = data.contratos_activos || [];
@@ -56,25 +60,36 @@ export class NuevoTicketComponent {
         if (this.contratosActivos.length === 1) {
           this.form.patchValue({ id_contrato: this.contratosActivos[0].id_contrato });
         }
-      },
-      error: (err) => {
+      }),
+      catchError((error) => {
         this.loading = false;
-        console.error(err);
+        console.error(error);
         this.errorMessage =
-          err?.error?.message || 'No se encontró cliente para ese NIT';
-      }
-    });
+          error?.error?.message || 'No se encontró cliente para ese NIT';
+        throw error;
+      }),
+    ).subscribe();
+    this.subscriptions.add(usuario);
   }
 
   seleccionarContrato(id_contrato: number) {
     this.form.patchValue({ id_contrato });
   }
 
-  onSubmit() {
+  enviarTicket() {
     this.errorMessage = '';
     this.resultado = null;
 
     if (this.form.invalid) {
+      Swal.fire({
+        title: 'Formulario invalido',
+        text: 'Complete los campos requeridos.',
+        icon: 'error',
+        iconColor: '#dc3545',
+        confirmButtonColor: '#0d6efd',
+        confirmButtonText: 'Aceptar',
+        allowOutsideClick: false
+      })
       this.form.markAllAsTouched();
       return;
     }
@@ -82,24 +97,35 @@ export class NuevoTicketComponent {
     this.loading = true;
 
     // solo enviamos lo necesario al backend
-    const payload = {
+    const dataTicket = {
       id_contrato: this.form.value.id_contrato,
       titulo: this.form.value.titulo,
       descripcion: this.form.value.descripcion
     };
 
-    this.ticketService.createTicket(payload as any).subscribe({
-      next: (resp) => {
+    const crearTicket = this.ticketService.crearTicket(dataTicket).pipe(
+      tap((resp) => {
         this.loading = false;
         this.resultado = resp;
-      },
-      error: (err) => {
+          Swal.fire({
+            title: 'Ticket creado con exito',
+            text: 'se ha generado con exito el ticket. Pronto nos pondremos en contacto.',
+            icon: 'success',
+            iconColor: '#28a745',
+            confirmButtonColor: '#0d6efd',
+            confirmButtonText: 'Aceptar',
+            allowOutsideClick: false
+          })
+      }),
+      catchError((error) => {
         this.loading = false;
-        console.error(err);
+        console.error(error);
         this.errorMessage =
-          err?.error?.message || 'Ocurrió un error al crear el ticket';
-      }
-    });
+          error?.error?.message || 'Ocurrió un error al crear el ticket';
+        throw error;
+      }),
+    ).subscribe();
+    this.subscriptions.add(crearTicket);
   }
 
   hasError(controlName: string, error: string): boolean {

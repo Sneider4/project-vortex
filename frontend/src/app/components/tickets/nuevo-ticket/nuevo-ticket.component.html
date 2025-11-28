@@ -1,92 +1,162 @@
-<div class="nuevo-ticket-container">
-  <h1>Nuevo Ticket</h1>
-  <p class="subtitulo">
-    Crea un ticket buscando primero el cliente por NIT. La IA clasificará tipo,
-    prioridad y riesgo de churn automáticamente.
-  </p>
+<div class="container my-4">
+  <div class="mb-3">
+    <h1 class="mb-1 fw-bold">Nuevo Ticket</h1>
+    <p class="text-muted mb-0">
+      Ingrese el Nit del cliente, seleccione un contrato y proporcione los detalles
+      del ticket para crear y analizarlo, posterior recibirá una respuesta de parte de nuestro equipo.
+    </p>
+  </div>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <!-- NIT y búsqueda -->
-    <div class="form-row-inline">
-      <div class="form-row">
-        <label for="nit">NIT del cliente</label>
-        <input id="nit" type="text" formControlName="nit" />
-        <small *ngIf="hasError('nit', 'required')">
-          El NIT es obligatorio.
-        </small>
+  <form [formGroup]="form" (ngSubmit)="enviarTicket()" class="card shadow-sm">
+    <div class="card-body">
+      <!-- NIT y búsqueda -->
+      <div class="row g-3 align-items-end mb-3">
+        <div class="col-12 col-md-6 col-lg-4">
+          <label for="nit" class="fw-semibold form-label"> NIT del cliente </label>
+          <input id="nit" type="text" formControlName="nit" class="form-control"/>
+          @if (hasError('nit', 'required')) {
+            <small class="text-danger"> El NIT es obligatorio. </small>
+          }
+        </div>
+
+        <div class="col-md-3">
+          <button type="button" class="btn btn-outline-primary" (click)="buscarClientePorNit()" [disabled]="loading">Buscar cliente</button>
+        </div>
       </div>
-      <div class="form-row boton-buscar">
-        <label>&nbsp;</label>
-        <button
-          type="button"
-          (click)="buscarClientePorNit()"
-          [disabled]="loading"
-        >
-          Buscar cliente
+
+      <!-- Info cliente / contratos -->
+      @if (clienteSeleccionado) {
+      <div>
+        <div class="border rounded p-3 mb-3 bg-light">
+          <p class="mb-1">
+            <strong>Cliente:</strong> {{ clienteSeleccionado.nombre }}
+          </p>
+          <p class="mb-0">
+            <strong>Sector:</strong>
+            {{ clienteSeleccionado.sector || "N/D" }}
+          </p>
+        </div>
+
+        @if (contratosActivos.length > 0) {
+        <p class="fw-semibold mb-2">Contratos activos:</p>
+        <div class="list-group mb-2">
+          @for (c of contratosActivos; track c.id_contrato) {
+          <label class="list-group-item">
+            <input class="form-check-input me-2" type="radio" formControlName="id_contrato" [value]="c.id_contrato"/>
+            {{ c.nombre_proyecto }} ({{ c.nivel_servicio || "N/A" }})
+          </label>
+          }
+        </div>
+        @if (hasError('id_contrato', 'required')) {
+        <small class="text-danger"> Debes seleccionar un contrato. </small>
+        } } @else {
+        <div class="alert alert-warning">
+          Este cliente no tiene contratos activos.
+        </div>
+        }
+      </div>
+      }
+
+      <hr class="my-3">
+
+      <!-- Datos del ticket -->
+      <div class="mb-3 mt-3">
+        <label for="titulo" class="form-label fw-semibold"> Título </label>
+        <input
+          id="titulo"
+          type="text"
+          formControlName="titulo"
+          class="form-control"
+        />
+        @if (hasError('titulo', 'required')) {
+        <small class="text-danger"> El título es obligatorio. </small>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="descripcion" class="form-label fw-semibold"> Descripción </label>
+        <textarea id="descripcion" rows="4" formControlName="descripcion" class="form-control" placeholder="Describe el problema o solicitud con el mayor detalle posible."></textarea>
+        @if (hasError('descripcion', 'required')) {
+        <small class="text-danger"> La descripción es obligatoria. </small>
+        }
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          {{ loading ? "Enviando solicitud..." : "Crear y Analizar Ticket" }}
         </button>
       </div>
-    </div>
 
-    <!-- Info de cliente y contratos activos -->
-    <div *ngIf="clienteSeleccionado" class="cliente-info">
-      <p><strong>Cliente:</strong> {{ clienteSeleccionado.nombre }}</p>
-      <p><strong>Sector:</strong> {{ clienteSeleccionado.sector || "N/D" }}</p>
-
-      <div *ngIf="contratosActivos.length > 0" class="contratos-lista">
-        <p><strong>Contratos activos:</strong></p>
-        <ul>
-          <li *ngFor="let c of contratosActivos">
-            <label>
-              <input
-                type="radio"
-                formControlName="id_contrato"
-                [value]="c.id_contrato"
-              />
-              {{ c.nombre_proyecto }} ({{ c.nivel_servicio || "N/A" }})
-            </label>
-          </li>
-        </ul>
-        <small *ngIf="hasError('id_contrato', 'required')">
-          Debes seleccionar un contrato.
-        </small>
-      </div>
-
-      <p *ngIf="contratosActivos.length === 0" class="estado">
-        Este cliente no tiene contratos activos.
+      @if (errorMessage) {
+      <p class="text-danger mt-3 mb-0">
+        {{ errorMessage }}
       </p>
+      }
     </div>
-
-    <!-- Datos del ticket -->
-    <div class="form-row">
-      <label for="titulo">Título</label>
-      <input id="titulo" type="text" formControlName="titulo" />
-      <small *ngIf="hasError('titulo', 'required')">
-        El título es obligatorio.
-      </small>
-    </div>
-
-    <div class="form-row">
-      <label for="descripcion">Descripción</label>
-      <textarea
-        id="descripcion"
-        rows="4"
-        formControlName="descripcion"
-        placeholder="Describe el problema o solicitud del cliente con el mayor detalle posible."
-      ></textarea>
-      <small *ngIf="hasError('descripcion', 'required')">
-        La descripción es obligatoria.
-      </small>
-    </div>
-
-    <button type="submit" [disabled]="loading">
-      {{ loading ? "Analizando con IA..." : "Crear y Analizar Ticket" }}
-    </button>
-
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
   </form>
 
-  <!-- Resultado del análisis (igual que antes) -->
-  <div class="resultado" *ngIf="resultado">
-    <!-- ... tu bloque de resultado actual ... -->
+  <!-- Resultado del análisis -->
+  @if (resultado) {
+  <div class="row g-3 mt-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Ticket creado</h2>
+          <p class="mb-1">
+            <strong>ID:</strong> {{ resultado.ticket.id_ticket }}
+          </p>
+          <p class="mb-1">
+            <strong>Título:</strong> {{ resultado.ticket.titulo }}
+          </p>
+          <p class="mb-1">
+            <strong>Descripción:</strong>
+            {{ resultado.ticket.descripcion }}
+          </p>
+          <p class="mb-1"><strong>Tipo:</strong> {{ resultado.ticket.tipo }}</p>
+          <p class="mb-1">
+            <strong>Prioridad:</strong> {{ resultado.ticket.prioridad }}
+          </p>
+          <p class="mb-0">
+            <strong>Estado:</strong> {{ resultado.ticket.estado }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Análisis</h2>
+          <p class="mb-1">
+            <strong>Sentimiento:</strong> {{ resultado.analisis.sentimiento }}
+          </p>
+          <p class="mb-1">
+            <strong>Frustración:</strong> {{ resultado.analisis.frustracion }}
+          </p>
+          <p class="mb-1">
+            <strong>Score churn:</strong> {{ resultado.analisis.score_churn }}
+          </p>
+          <p class="mb-1">
+            <strong>Riesgo churn:</strong>
+            {{ resultado.analisis.riesgo_churn }}
+          </p>
+          <p class="mb-1">
+            <strong>Phishing potencial:</strong>
+            {{ resultado.analisis.es_potencial_phishing ? "Sí" : "No" }}
+          </p>
+          <p class="mb-2">
+            <strong>Datos sensibles:</strong>
+            {{ resultado.analisis.tiene_datos_sensibles ? "Sí" : "No" }}
+          </p>
+          <p class="mb-0">
+            <strong>Recomendaciones:</strong>
+          </p>
+          <p class="mb-0">
+            {{ resultado.analisis.recomendaciones }}
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
+  }
 </div>

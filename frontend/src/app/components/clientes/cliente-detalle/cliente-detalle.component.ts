@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ClienteService } from '../../../services/cliente.service';
 import { ClienteResumen } from '../../../../models/vortex.model'
+import moment from 'moment';
+import 'moment/locale/es';
+import { catchError, Subscription, tap } from 'rxjs';
 
 @Component({
   selector: 'app-cliente-detalle',
@@ -12,15 +15,18 @@ import { ClienteResumen } from '../../../../models/vortex.model'
   styleUrls: ['./cliente-detalle.component.scss']
 })
 export class ClienteDetalleComponent implements OnInit {
+
   clienteId!: number;
   data: ClienteResumen | null = null;
   loading = false;
   errorMessage = '';
 
-  constructor(
-    private route: ActivatedRoute,
-    private clienteService: ClienteService
-  ) { }
+  private subscriptions: Subscription = new Subscription();
+
+  private route = inject(ActivatedRoute)
+  private clienteService = inject(ClienteService)
+
+  constructor( ) { }
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -35,20 +41,20 @@ export class ClienteDetalleComponent implements OnInit {
   }
 
   cargarResumen() {
-    this.loading = true;
-    this.errorMessage = '';
-    this.clienteService.getResumen(this.clienteId).subscribe({
-      next: (res) => {
+    const resumen = this.clienteService.getResumen(this.clienteId).pipe(
+      tap((data) => {
         this.loading = false;
-        this.data = res;
-      },
-      error: (err) => {
+        this.data = data;
+      }),
+      catchError((error) => {
         this.loading = false;
-        console.error(err);
+        console.error(error);
         this.errorMessage =
-          err?.error?.message || 'Error al cargar el detalle del cliente';
-      }
-    });
+          error?.error?.message || 'Error al cargar el detalle del cliente';
+        throw error;
+      }),
+    ).subscribe();
+    this.subscriptions.add(resumen);
   }
 
   getCantidadPorRiesgo(riesgo: string): number {
@@ -58,4 +64,10 @@ export class ClienteDetalleComponent implements OnInit {
     );
     return item ? item.cantidad : 0;
   }
+
+  formateadorFecha(fecha: string | null) {
+    moment.locale('es');
+    return moment(fecha).format('dddd, DD [de] MMMM YYYY');
+  }
+
 }

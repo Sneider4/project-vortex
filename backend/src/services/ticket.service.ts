@@ -1,44 +1,9 @@
 // src/services/ticket.service.ts
 import { pool } from '../db/pool';
-import { AnalisisIAResult, analizarTextoTicketConIA } from './ia.service';
+import { AnalisisIAResult } from '../models/ia.models';
+import { AnalisisRow, CreateTicketDTO, TicketRow, TicketWithAnalysis } from '../models/ticket.model';
+import { analizarTextoTicketConIA } from './ia.service';
 
-interface CreateTicketDTO {
-    id_contrato: number;
-    titulo: string;
-    descripcion: string;
-    tipo?: string | null;
-    prioridad?: string | null;
-}
-
-interface TicketRow {
-    id_ticket: number;
-    id_contrato: number;
-    titulo: string;
-    descripcion: string;
-    tipo: string | null;
-    prioridad: string | null;
-    estado: string;
-    fecha_creacion: Date;
-    fecha_cierre: Date | null;
-}
-
-interface AnalisisRow {
-    id_analisis: number;
-    id_ticket: number;
-    sentimiento: string | null;
-    frustracion: string | null;
-    score_churn: number | null;
-    riesgo_churn: string | null;
-    es_potencial_phishing: boolean;
-    tiene_datos_sensibles: boolean;
-    recomendaciones: string | null;
-    fecha_analisis: Date;
-}
-
-export interface TicketWithAnalysis {
-    ticket: TicketRow;
-    analisis: AnalisisRow | null;
-}
 
 export async function createTicketWithAnalysis(
     data: CreateTicketDTO
@@ -48,7 +13,6 @@ export async function createTicketWithAnalysis(
     try {
         await client.query('BEGIN');
 
-        // 1️⃣ Insertar ticket
         const insertTicketQuery = `
             INSERT INTO tickets (
                 id_contrato, titulo, descripcion
@@ -67,15 +31,12 @@ export async function createTicketWithAnalysis(
         let analisisIA: AnalisisIAResult;
 
         try {
-            analisisIA = await analizarTextoTicketConIA(ticket.descripcion, {
-                // puedes poner contexto si quieres
-            });
+            analisisIA = await analizarTextoTicketConIA(ticket.descripcion, {});
         } catch (error) {
-            console.error('❌ Error llamando a OpenAI, usando fallback local:', error);
+            console.error("❌ Error llamando a Gemini, usando fallback local:", error);
             analisisIA = analizarTextoTicketFallback(ticket.descripcion);
         }
 
-        // 3️⃣ Insertar análisis en BD
         const insertAnalisisQuery = `
             INSERT INTO analisis_ticket (
                 id_ticket,
@@ -106,7 +67,7 @@ export async function createTicketWithAnalysis(
 
         const analisisRow = analisisResult.rows[0];
 
-        // 4) Actualizar tipo y prioridad en la tabla tickets según IA
+        //Actualiza tipo y prioridad en la tabla tickets según IA
         const updateTicketMetaQuery = `
             UPDATE tickets
             SET tipo = $1,

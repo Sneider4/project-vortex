@@ -1,13 +1,13 @@
 // src/routes/tickets.routes.ts
 import { Router } from 'express';
-import { createTicketHandler, listTicketsHandler } from '../controllers/ticket.controller';
+import { crearTicketHandler, listadoTicketsHandler } from '../controllers/ticket.controller';
 
 const router = Router();
 
 // Listar tickets
-router.get('/listadoTicket', listTicketsHandler);
+router.get('/listadoTicket', listadoTicketsHandler);
 
 // Crear ticket + análisis
-router.post('/listadoTicketAnalisis', createTicketHandler);
+router.post('/listadoTicketAnalisis', crearTicketHandler);
 
 export default router;

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TicketService } from '../../../services/ticket.service';
 import { TicketWithAnalysis } from '../../../../models/vortex.model'
+import { catchError, Subscription, tap } from 'rxjs';
 
 @Component({
   selector: 'app-lista-tickets',
@@ -15,7 +16,14 @@ export class ListaTicketsComponent implements OnInit {
   loading = false;
   errorMessage = '';
 
-  constructor(private ticketService: TicketService) { }
+  pageSize = 10;
+  currentPage = 1;
+
+  private subscriptions: Subscription = new Subscription();
+
+  private ticketService = inject(TicketService)
+
+  constructor() { }
 
   ngOnInit(): void {
     this.cargarTickets();
@@ -24,43 +32,63 @@ export class ListaTicketsComponent implements OnInit {
   cargarTickets() {
     this.loading = true;
     this.errorMessage = '';
-    this.ticketService.getTickets().subscribe({
-      next: (items) => {
+    const tickets = this.ticketService.getTickets().pipe(
+      tap((items) => {
         this.loading = false;
         this.tickets = items;
-      },
-      error: (err) => {
+        console.log("🚀 ~ ListaTicketsComponent ~ cargarTickets ~ this.tickets:", this.tickets)
+      }),
+      catchError((error) => {
         this.loading = false;
-        console.error(err);
+        console.error(error);
         this.errorMessage =
-          err?.error?.message || 'Error al cargar la lista de tickets';
-      }
-    });
+          error?.error?.message || 'Error al cargar la lista de tickets';
+        throw error;
+      }),
+    ).subscribe();
+    this.subscriptions.add(tickets);
   }
 
-  getRiesgoClass(riesgo: string | null | undefined): string {
+
+  getRiesgoClass(riesgo: string | null) {
     switch (riesgo) {
       case 'ALTO':
-        return 'badge badge-alto';
+        return 'text-bg-danger';
       case 'MEDIO':
-        return 'badge badge-medio';
+        return 'text-bg-warning';
       case 'BAJO':
-        return 'badge badge-bajo';
+        return 'text-bg-success';
       default:
-        return 'badge badge-nd';
+        return 'text-bg-secondary';
     }
   }
 
-  getSentimientoClass(sentimiento: string | null | undefined): string {
+  getSentimientoClass(sentimiento: string | null) {
     switch (sentimiento) {
-      case 'NEGATIVO':
-        return 'badge badge-negativo';
-      case 'NEUTRO':
-        return 'badge badge-neutro';
       case 'POSITIVO':
-        return 'badge badge-positivo';
+        return 'text-bg-success';
+      case 'NEGATIVO':
+        return 'text-bg-danger';
+      case 'NEUTRO':
+        return 'text-bg-secondary';
       default:
-        return 'badge badge-nd';
+        return 'text-bg-light text-muted';
     }
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.tickets.length / this.pageSize) || 1;
+  }
+
+  get pages(): number[] {
+    const total = this.totalPages;
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+    this.currentPage = page;
   }
 }

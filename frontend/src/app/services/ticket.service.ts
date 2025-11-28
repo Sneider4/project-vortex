@@ -12,7 +12,7 @@ export class TicketService {
 
   constructor(private http: HttpClient) { }
 
-  createTicket(data: CreateTicketRequest): Observable<CreateTicketResponse> {
+  crearTicket(data: CreateTicketRequest): Observable<CreateTicketResponse> {
     return this.http.post<CreateTicketResponse>(`${this.baseUrl}/listadoTicketAnalisis`, data);
   }
 
