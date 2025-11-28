@@ -1,0 +1,85 @@
+.nuevo-ticket-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #f7f9fc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  h1 {
+    margin-bottom: 0.25rem;
+  }
+
+  .subtitulo {
+    color: #555;
+    margin-bottom: 1.5rem;
+  }
+
+  form {
+    margin-bottom: 2rem;
+  }
+
+  .form-row,
+  .form-row-inline > div {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-row-inline {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  input,
+  textarea,
+  select {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+  }
+
+  button {
+    margin-top: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    background: #0052cc;
+    color: #fff;
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
+  }
+
+  small {
+    color: #c0392b;
+  }
+
+  .error {
+    color: #c0392b;
+    margin-top: 0.5rem;
+  }
+
+  .resultado {
+    margin-top: 2rem;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+    border: 1px solid #e1e5ee;
+  }
+}

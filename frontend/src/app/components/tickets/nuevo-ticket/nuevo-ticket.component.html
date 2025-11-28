@@ -1,0 +1,92 @@
+<div class="nuevo-ticket-container">
+  <h1>Nuevo Ticket</h1>
+  <p class="subtitulo">
+    Crea un ticket buscando primero el cliente por NIT. La IA clasificará tipo,
+    prioridad y riesgo de churn automáticamente.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <!-- NIT y búsqueda -->
+    <div class="form-row-inline">
+      <div class="form-row">
+        <label for="nit">NIT del cliente</label>
+        <input id="nit" type="text" formControlName="nit" />
+        <small *ngIf="hasError('nit', 'required')">
+          El NIT es obligatorio.
+        </small>
+      </div>
+      <div class="form-row boton-buscar">
+        <label>&nbsp;</label>
+        <button
+          type="button"
+          (click)="buscarClientePorNit()"
+          [disabled]="loading"
+        >
+          Buscar cliente
+        </button>
+      </div>
+    </div>
+
+    <!-- Info de cliente y contratos activos -->
+    <div *ngIf="clienteSeleccionado" class="cliente-info">
+      <p><strong>Cliente:</strong> {{ clienteSeleccionado.nombre }}</p>
+      <p><strong>Sector:</strong> {{ clienteSeleccionado.sector || "N/D" }}</p>
+
+      <div *ngIf="contratosActivos.length > 0" class="contratos-lista">
+        <p><strong>Contratos activos:</strong></p>
+        <ul>
+          <li *ngFor="let c of contratosActivos">
+            <label>
+              <input
+                type="radio"
+                formControlName="id_contrato"
+                [value]="c.id_contrato"
+              />
+              {{ c.nombre_proyecto }} ({{ c.nivel_servicio || "N/A" }})
+            </label>
+          </li>
+        </ul>
+        <small *ngIf="hasError('id_contrato', 'required')">
+          Debes seleccionar un contrato.
+        </small>
+      </div>
+
+      <p *ngIf="contratosActivos.length === 0" class="estado">
+        Este cliente no tiene contratos activos.
+      </p>
+    </div>
+
+    <!-- Datos del ticket -->
+    <div class="form-row">
+      <label for="titulo">Título</label>
+      <input id="titulo" type="text" formControlName="titulo" />
+      <small *ngIf="hasError('titulo', 'required')">
+        El título es obligatorio.
+      </small>
+    </div>
+
+    <div class="form-row">
+      <label for="descripcion">Descripción</label>
+      <textarea
+        id="descripcion"
+        rows="4"
+        formControlName="descripcion"
+        placeholder="Describe el problema o solicitud del cliente con el mayor detalle posible."
+      ></textarea>
+      <small *ngIf="hasError('descripcion', 'required')">
+        La descripción es obligatoria.
+      </small>
+    </div>
+
+    <button type="submit" [disabled]="loading">
+      {{ loading ? "Analizando con IA..." : "Crear y Analizar Ticket" }}
+    </button>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </form>
+
+  <!-- Resultado del análisis (igual que antes) -->
+  <div class="resultado" *ngIf="resultado">
+    <!-- ... tu bloque de resultado actual ... -->
+  </div>
+</div>

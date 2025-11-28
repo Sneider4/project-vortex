@@ -1,0 +1,94 @@
+.lista-tickets-container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #f7f9fc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .subtitulo {
+    color: #555;
+  }
+
+  .estado {
+    margin-top: 1rem;
+  }
+
+  .estado.error {
+    color: #c0392b;
+  }
+
+  .tickets-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+
+    th,
+    td {
+      border-bottom: 1px solid #e0e4ee;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      font-weight: 600;
+      background: #eef2fb;
+    }
+
+    .titulo {
+      max-width: 260px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-alto {
+    background: #ffe5e5;
+    color: #c0392b;
+  }
+
+  .badge-medio {
+    background: #fff4e0;
+    color: #d35400;
+  }
+
+  .badge-bajo {
+    background: #e6f8ee;
+    color: #27ae60;
+  }
+
+  .badge-negativo {
+    background: #ffe5e5;
+    color: #c0392b;
+  }
+
+  .badge-neutro {
+    background: #edf1f7;
+    color: #2c3e50;
+  }
+
+  .badge-positivo {
+    background: #e6f8ee;
+    color: #27ae60;
+  }
+
+  .badge-nd {
+    background: #ecf0f1;
+    color: #7f8c8d;
+  }
+}

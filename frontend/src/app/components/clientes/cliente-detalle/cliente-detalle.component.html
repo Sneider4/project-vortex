@@ -1,0 +1,131 @@
+<div class="cliente-detalle-container" *ngIf="!loading && data">
+  <div class="header">
+    <h1>{{ data.cliente.nombre }}</h1>
+    <p class="subtitulo">
+      Resumen de interacción de soporte, riesgo de churn y tickets recientes.
+    </p>
+  </div>
+
+  <div class="info-cliente">
+    <div class="card">
+      <h3>Información del cliente</h3>
+      <p><strong>NIT:</strong> {{ data.cliente.nit || "N/D" }}</p>
+      <p><strong>Sector:</strong> {{ data.cliente.sector || "N/D" }}</p>
+      <p>
+        <strong>Inicio relación:</strong>
+        {{
+          data.cliente.fecha_inicio_relacion
+            ? (data.cliente.fecha_inicio_relacion | date)
+            : "N/D"
+        }}
+      </p>
+      <p><strong>Estado:</strong> {{ data.cliente.estado }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Resumen de churn</h3>
+      <p>
+        <strong>Total tickets:</strong>
+        {{ data.resumen.total_tickets }}
+      </p>
+      <p>
+        <strong>Score promedio:</strong>
+        {{ data.resumen.promedio_score_churn | number : "1.0-1" }}
+      </p>
+      <p>
+        <strong>Riesgo predominante:</strong>
+        <span
+          class="badge"
+          [ngClass]="{
+            'badge-alto': data.resumen.riesgo_predominante === 'ALTO',
+            'badge-medio': data.resumen.riesgo_predominante === 'MEDIO',
+            'badge-bajo': data.resumen.riesgo_predominante === 'BAJO',
+            'badge-nd': !data.resumen.riesgo_predominante
+          }"
+        >
+          {{ data.resumen.riesgo_predominante || "N/D" }}
+        </span>
+      </p>
+
+      <ul class="riesgos-lista">
+        <li>
+          <span class="badge badge-alto">ALTO</span>
+          <span class="cantidad">{{ getCantidadPorRiesgo("ALTO") }}</span>
+        </li>
+        <li>
+          <span class="badge badge-medio">MEDIO</span>
+          <span class="cantidad">{{ getCantidadPorRiesgo("MEDIO") }}</span>
+        </li>
+        <li>
+          <span class="badge badge-bajo">BAJO</span>
+          <span class="cantidad">{{ getCantidadPorRiesgo("BAJO") }}</span>
+        </li>
+        <li>
+          <span class="badge badge-nd">N/D</span>
+          <span class="cantidad">{{ getCantidadPorRiesgo("N/D") }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="contratos" *ngIf="data.contratos.length > 0">
+    <h2>Contratos</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Proyecto</th>
+          <th>Inicio</th>
+          <th>Fin</th>
+          <th>Estado</th>
+          <th>Nivel servicio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ct of data.contratos">
+          <td>{{ ct.nombre_proyecto }}</td>
+          <td>{{ ct.fecha_inicio | date }}</td>
+          <td>{{ ct.fecha_fin | date }}</td>
+          <td>{{ ct.estado }}</td>
+          <td>{{ ct.nivel_servicio || "N/D" }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tickets">
+    <h2>Tickets recientes</h2>
+    <table *ngIf="data.tickets_recientes.length > 0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Título</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Sentimiento</th>
+          <th>Riesgo</th>
+          <th>Score</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of data.tickets_recientes">
+          <td>{{ t.id_ticket }}</td>
+          <td class="titulo">{{ t.titulo }}</td>
+          <td>{{ t.prioridad }}</td>
+          <td>{{ t.estado }}</td>
+          <td>{{ t.sentimiento || "N/D" }}</td>
+          <td>{{ t.riesgo_churn || "N/D" }}</td>
+          <td>{{ t.score_churn ?? "-" }}</td>
+          <td>{{ t.fecha_creacion | date : "short" }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="data.tickets_recientes.length === 0" class="estado">
+      Este cliente aún no tiene tickets registrados.
+    </p>
+  </div>
+</div>
+
+<div *ngIf="loading" class="estado">Cargando detalle del cliente...</div>
+<div *ngIf="errorMessage" class="estado error">{{ errorMessage }}</div>

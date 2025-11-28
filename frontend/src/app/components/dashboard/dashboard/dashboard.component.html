@@ -1,0 +1,96 @@
+<div class="dashboard-container">
+  <div class="header">
+    <h1>Dashboard de Churn y Soporte</h1>
+    <p class="subtitulo">
+      Visión general del riesgo de churn, tickets analizados y clientes
+      críticos.
+    </p>
+  </div>
+
+  <div *ngIf="loading" class="estado">Cargando dashboard...</div>
+  <div *ngIf="errorMessage" class="estado error">{{ errorMessage }}</div>
+
+  <ng-container *ngIf="!loading && data">
+    <!-- Tarjetas resumen -->
+    <div class="cards">
+      <div class="card">
+        <h3>Total de tickets</h3>
+        <p class="valor">{{ data.total_tickets }}</p>
+        <p class="detalle">Tickets registrados en el sistema.</p>
+      </div>
+
+      <div class="card">
+        <h3>Clientes con tickets</h3>
+        <p class="valor">{{ data.total_clientes_con_tickets }}</p>
+        <p class="detalle">Clientes activos con interacción de soporte.</p>
+      </div>
+
+      <div class="card">
+        <h3>Riesgo de churn</h3>
+        <ul class="riesgos-lista">
+          <li>
+            <span class="badge badge-alto">ALTO</span>
+            <span class="cantidad">{{ getCantidadPorRiesgo("ALTO") }}</span>
+          </li>
+          <li>
+            <span class="badge badge-medio">MEDIO</span>
+            <span class="cantidad">{{ getCantidadPorRiesgo("MEDIO") }}</span>
+          </li>
+          <li>
+            <span class="badge badge-bajo">BAJO</span>
+            <span class="cantidad">{{ getCantidadPorRiesgo("BAJO") }}</span>
+          </li>
+          <li>
+            <span class="badge badge-nd">N/D</span>
+            <span class="cantidad">{{ getCantidadPorRiesgo("N/D") }}</span>
+          </li>
+        </ul>
+        <p class="detalle">Distribución de tickets según nivel de riesgo.</p>
+      </div>
+    </div>
+
+    <!-- Top clientes en riesgo -->
+    <div class="top-clientes">
+      <h2>Top clientes en riesgo (últimos 30 días)</h2>
+
+      <table *ngIf="data.top_clientes.length > 0">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Total tickets</th>
+            <th>Score promedio</th>
+            <th>Riesgo predominante</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of data.top_clientes">
+            <td>
+              <a [routerLink]="['/clientes', c.id_cliente]">
+                {{ c.nombre_cliente }}
+              </a>
+            </td>
+            <td>{{ c.total_tickets }}</td>
+            <td>{{ c.promedio_score_churn | number : "1.0-1" }}</td>
+            <td>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'badge-alto': c.riesgo_predominante === 'ALTO',
+                  'badge-medio': c.riesgo_predominante === 'MEDIO',
+                  'badge-bajo': c.riesgo_predominante === 'BAJO',
+                  'badge-nd': !c.riesgo_predominante
+                }"
+              >
+                {{ c.riesgo_predominante || "N/D" }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p *ngIf="data.top_clientes.length === 0" class="estado">
+        Aún no hay suficientes tickets para calcular clientes en riesgo.
+      </p>
+    </div>
+  </ng-container>
+</div>

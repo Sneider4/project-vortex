@@ -1,0 +1,66 @@
+<div class="lista-tickets-container">
+  <div class="header">
+    <h1>Tickets registrados</h1>
+    <p class="subtitulo">
+      Visualiza los tickets creados y su análisis de sentimiento, frustración y riesgo de churn.
+    </p>
+  </div>
+
+  <div class="estado" *ngIf="loading">Cargando tickets...</div>
+  <div class="estado error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <table *ngIf="!loading && tickets.length > 0" class="tickets-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Contrato</th>
+        <th>Título</th>
+        <th>Prioridad</th>
+        <th>Sentimiento</th>
+        <th>Riesgo churn</th>
+        <th>Score</th>
+        <th>Phishing</th>
+        <th>Datos sensibles</th>
+        <th>Fecha creación</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of tickets">
+        <td>{{ item.ticket.id_ticket }}</td>
+        <td>{{ item.ticket.id_contrato }}</td>
+        <td class="titulo">{{ item.ticket.titulo }}</td>
+        <td>{{ item.ticket.prioridad }}</td>
+        <td>
+          <span
+            [ngClass]="getSentimientoClass(item.analisis.sentimiento || null)"
+          >
+            {{ item.analisis.sentimiento || 'N/D' }}
+          </span>
+        </td>
+        <td>
+          <span
+            [ngClass]="getRiesgoClass(item.analisis.riesgo_churn || null)"
+          >
+            {{ item.analisis.riesgo_churn || 'N/D' }}
+          </span>
+        </td>
+        <td>
+          {{ item.analisis.score_churn ?? '-' }}
+        </td>
+        <td>
+          {{ item.analisis.es_potencial_phishing ? '⚠️ Sí' : 'No' }}
+        </td>
+        <td>
+          {{ item.analisis.tiene_datos_sensibles ? '⚠️ Sí' : 'No' }}
+        </td>
+        <td>
+          {{ item.ticket.fecha_creacion | date: 'short' }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && tickets.length === 0" class="estado">
+    No hay tickets registrados todavía.
+  </div>
+</div>

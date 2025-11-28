@@ -1,0 +1,20 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <span class="logo">Vortex Churn</span>
+  </div>
+  <div class="navbar-right">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Dashboard
+    </a>
+    <a [routerLink]="['/nuevo-ticket']" routerLinkActive="active"> Nuevo ticket </a>
+    <a [routerLink]="['/tickets']" routerLinkActive="active"> Tickets </a>
+  </div>
+</nav>
+
+<main class="main-container">
+  <router-outlet></router-outlet>
+</main>
