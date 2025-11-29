@@ -44,17 +44,20 @@
         </button>
       </div>
       @if (isSidebarCollapsed) {
-        <!-- Cuando está colapsado, en escritorio mostramos solo el icono del logo -->
-        <div class="sidebar-header-collapsed d-none d-lg-flex align-items-center justify-content-center border-bottom">
-          <span class="fs-5 fw-bold">VTX</span>
-        </div>
+      <!-- Cuando está colapsado, en escritorio mostramos solo el icono del logo -->
+      <div
+        class="sidebar-header-collapsed d-none d-lg-flex align-items-center justify-content-center border-bottom"
+      >
+        <span class="fs-5 fw-bold">VTX</span>
+      </div>
       }
 
       <!-- Links de navegación -->
       <ul class="nav nav-pills flex-column mb-auto py-2">
+        @if (auth.isLoggedIn()) {
         <li class="nav-item">
           <a
-            routerLink="/"
+            routerLink="/dashboard"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: true }"
             class="nav-link custom-link d-flex align-items-center gap-3"
@@ -64,6 +67,7 @@
             <span class="nav-label">Dashboard</span>
           </a>
         </li>
+        }
 
         <li class="nav-item">
           <a
@@ -77,6 +81,7 @@
           </a>
         </li>
 
+        @if (auth.isLoggedIn()) {
         <li class="nav-item">
           <a
             [routerLink]="['/tickets']"
@@ -112,11 +117,35 @@
             <span class="nav-label">Contratos</span>
           </a>
         </li>
+        }
       </ul>
+      <div class="mt-auto d-none d-lg-block">
+        <div class="p-3 border-top">
+          @if (!auth.isLoggedIn()) {
+          <button
+            type="button"
+            class="btn btn-primary w-100"
+            (click)="goToLogin()"
+          >
+            Ingresar
+          </button>
+          } @else {
+          <div class="d-flex flex-column gap-2">
+            <small class="text-muted text-center">Sesión: admin</small>
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm w-100"
+              (click)="logout()"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+          }
+        </div>
 
-      <!-- Footer del sidebar -->
-      <div class="mt-auto p-3 small text-muted border-top d-none d-lg-block">
-        &copy; {{ currentYear }} Vortex
+        <div class="p-3 small text-muted border-top">
+          &copy; {{ currentYear }} Vortex
+        </div>
       </div>
     </div>
   </nav>

@@ -18,9 +18,12 @@ export class TicketService {
 
   getTickets(): Observable<TicketWithAnalysis[]> {
     return this.http.get<{ items: TicketWithAnalysis[] }>(`${this.baseUrl}/listadoTicket`).pipe(
-        // nos quedamos solo con el array items
-        map((resp) => resp.items)
-      );
+      // nos quedamos solo con el array items
+      map((resp) => resp.items)
+    );
   }
 
+  getDetalleTicket(idTicket: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/${idTicket}/detalleTicket`);
+  }
 }

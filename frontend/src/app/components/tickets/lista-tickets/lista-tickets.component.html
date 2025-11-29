@@ -36,7 +36,7 @@
         <tr>
           <td>{{ item.ticket.id_ticket }}</td>
           <td>{{ item.ticket.id_contrato }}</td>
-          <td class="fw-semibold">
+          <td class="fw-semibold" [routerLink]="['/detalle-ticket', item.ticket.id_ticket]" style="cursor: pointer;">
             {{ item.ticket.titulo }}
           </td>
           <td>{{ item.ticket.prioridad }}</td>
@@ -69,11 +69,16 @@
               type="button"
               class="btn"
               [ngClass]="{
-                'btn-outline-danger': item.ticket.estado === 'ABIERTO',
-                'btn-outline-warning': item.ticket.estado === 'EN_PROCESO',
-                'btn-outline-success': item.ticket.estado === 'CERRADO'
+                'btn-outline-warning': item.ticket.estado === 'ENTREGADO',
+                'btn-outline-info': item.ticket.estado === 'EN_PROCESO',
+                'btn-outline-success': item.ticket.estado === 'CERRADO',
+                'btn-outline-danger':
+                  item.ticket.estado === 'BLOQUEADO_POR_SEGURIDAD'
               }"
             >
+              @if (item.ticket.estado === 'BLOQUEADO_POR_SEGURIDAD') {
+              <i class="bi bi-exclamation-triangle text-danger me-1"></i>
+              }
               {{ item.ticket.estado }}
             </button>
           </td>

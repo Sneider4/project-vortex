@@ -51,11 +51,18 @@ export interface RiesgoResumen {
   cantidad: number;
 }
 
+export interface SentimientoResumen {
+  sentimiento: string | null;
+  cantidad: number;
+}
+
 export interface DashboardResumen {
   top_clientes: TopCliente[];
   resumen_riesgo: RiesgoResumen[];
   total_tickets: number;
   total_clientes_con_tickets: number;
+  churn_score_global: number;
+  resumen_sentimiento: SentimientoResumen[]
 }
 
 export interface ClienteResumen {
@@ -134,4 +141,26 @@ export interface Contrato {
   valor_mensual: string;
   estado: string;
   nivel_servicio: string | null;
+}
+
+
+export interface TicketDetalle {
+  id_ticket: number;
+  id_contrato: number;
+  titulo: string;
+  descripcion: string;
+  tipo: string;
+  prioridad: string;
+  estado: string;
+  fecha_creacion: string;
+  fecha_cierre: string | null;
+  id_analisis: number;
+  sentimiento: string;
+  frustracion: string;
+  es_potencial_phishing: boolean;
+  tiene_datos_sensibles: boolean;
+  recomendaciones: string;
+  fecha_analisis: string;
+  score_churn: string;      // viene como '85.00'
+  riesgo_churn: string;
 }

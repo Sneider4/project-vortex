@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { TicketService } from '../../../services/ticket.service';
 import { TicketWithAnalysis } from '../../../../models/vortex.model'
 import { catchError, Subscription, tap } from 'rxjs';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-lista-tickets',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './lista-tickets.component.html',
   styleUrls: ['./lista-tickets.component.scss']
 })

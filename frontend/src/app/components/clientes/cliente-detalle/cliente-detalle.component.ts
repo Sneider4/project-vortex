@@ -70,4 +70,9 @@ export class ClienteDetalleComponent implements OnInit {
     return moment(fecha).format('dddd, DD [de] MMMM YYYY');
   }
 
+  goBack(): void {
+    // si prefieres Router, lo cambias por router.navigate...
+    window.history.back();
+  }
+
 }

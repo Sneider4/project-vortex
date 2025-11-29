@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './services/auth/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -13,8 +14,21 @@ export class AppComponent {
   isSidebarCollapsed = false;
   currentYear = new Date().getFullYear();
 
+  auth = inject(AuthService);
+  private router = inject(Router);
+
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
+  }
+
+  logout(): void {
+    this.auth.logout();
+    // Al cerrar sesión, lo mandamos a nuevo-ticket
+    this.router.navigate(['/nuevo-ticket']);
   }
 
 }

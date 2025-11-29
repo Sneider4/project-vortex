@@ -121,7 +121,9 @@
   </div>
   } @else {
   <div class="col-12 text-center mb-5">
-    <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px">El cliente aun no tiene ningún contrato</small>
+    <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px"
+      >El cliente aun no tiene ningún contrato</small
+    >
   </div>
   }
 
@@ -148,7 +150,13 @@
           @for (t of data.tickets_recientes; track t.id_ticket) {
           <tr>
             <td>{{ t.id_ticket }}</td>
-            <td class="fw-semibold">{{ t.titulo }}</td>
+            <td
+              class="fw-semibold"
+              [routerLink]="['/detalle-ticket', t.id_ticket]"
+              style="cursor: pointer"
+            >
+              {{ t.titulo }}
+            </td>
             <td>{{ t.prioridad }}</td>
             <td>{{ t.estado }}</td>
             <td>{{ t.sentimiento || "N/D" }}</td>
@@ -162,9 +170,16 @@
     </div>
     } @else {
     <div class="col-12 text-center mb-5">
-      <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px">Este cliente aun no tiene tickets registrados</small>
+      <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px"
+        >Este cliente aun no tiene tickets registrados</small
+      >
     </div>
     }
+  </div>
+  <div class="mt-3">
+    <button class="btn btn-outline-secondary" (click)="goBack()">
+      Volver al dashboard
+    </button>
   </div>
 </div>
 } @if (loading) {
