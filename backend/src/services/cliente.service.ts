@@ -107,6 +107,9 @@ export async function listarContratos(): Promise<Contrato[]> {
     return result.rows;
 }
 
+
+
+
 export async function listarClientes(): Promise<Cliente[]> {
     const query = `
         SELECT

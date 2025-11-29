@@ -35,3 +35,10 @@ export interface TicketWithAnalysis {
     ticket: TicketRow;
     analisis: AnalisisRow | null;
 }
+
+export interface PreprocesamientoTextoResult {
+    textoOriginal: string;
+    textoAnonimizado: string;
+    tieneDatosSensibles: boolean;
+    esPhishingSospechoso: boolean;
+}

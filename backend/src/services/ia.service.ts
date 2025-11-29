@@ -1,13 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
-import { AnalisisIAResult } from "../models/ia.models";
+import { AnalisisIAResult, reglasPalabras } from "../models/ia.models";
 
 dotenv.config();
-
-/**
- * Interfaz del análisis que devolverá la IA (Gemini o fallback local)
- */
-
 
 /**
  * Cliente de Gemini (Google AI)
@@ -23,10 +18,10 @@ if (!geminiApiKey) {
     genAI = new GoogleGenerativeAI(geminiApiKey);
 }
 
-/**
- * Función principal: analiza el texto usando Gemini.
- */
-export async function analizarTextoTicketConIA(descripcion: string, contexto?: { cliente?: string; contrato?: string }): Promise<AnalisisIAResult> {
+export async function analizarTextoTicketConIA(
+    descripcion: string,
+    contextoCliente?: { nombre_cliente: string; fecha_inicio_relacion: any, total_contratos_cliente?: number }
+): Promise<AnalisisIAResult> {
     if (!genAI) {
         throw new Error("Gemini no está configurado (GEMINI_API_KEY faltante).");
     }
@@ -35,55 +30,77 @@ export async function analizarTextoTicketConIA(descripcion: string, contexto?: {
     const model = genAI.getGenerativeModel({ model: modelName });
 
     const systemPrompt = `
-    Eres un analista experto en soporte de software, experiencia de cliente, ciberseguridad y gestión de churn.
+        Somos expertos en desarrollo de software a la medida.
+        Eres un analista experto en soporte de software, experiencia de cliente, ciberseguridad y gestión de churn.
 
-    Debes analizar el texto de un ticket y devolver SIEMPRE una respuesta en JSON válido.
+        Tu ÚNICA tarea es leer el texto de un ticket y devolver SOLO un JSON válido con este esquema:
 
-    Instrucciones IMPORTANTES:
-    - Responde ÚNICAMENTE con un JSON válido, sin texto adicional antes o después.
-    - No incluyas comentarios, explicaciones ni texto fuera del JSON.
-    - Respeta estrictamente los valores permitidos.
+        {
+            "sentimiento": "POSITIVO" | "NEUTRO" | "NEGATIVO",
+            "frustracion": "BAJA" | "MEDIA" | "ALTA",
+            "score_churn": número entero entre 0 y 100,
+            "riesgo_churn": "BAJO" | "MEDIO" | "ALTO",
+            "es_potencial_phishing": true | false,
+            "tiene_datos_sensibles": true | false,
+            "tipo_ticket": "CORRECTIVO" | "EVOLUTIVO" | "OTRO",
+            "prioridad_ticket": "BAJA" | "MEDIA" | "ALTA" | "CRITICA",
+            "recomendaciones": "texto en español con sugerencias para el equipo de soporte que es acount manager para reducir churn y mejorar la experiencia del cliente sobre la base del análisis del ticket "
+        }
 
-    Estructura del JSON:
+        El sistema te proporciona unas LISTAS DE PALABRAS CLAVE como referencia (no son reglas absolutas):
 
-    {
-        "sentimiento": "POSITIVO|NEUTRO|NEGATIVO",
-        "frustracion": "BAJA|MEDIA|ALTA",
-        "score_churn": 0-100,
-        "riesgo_churn": "BAJO|MEDIO|ALTO",
-        "es_potencial_phishing": true/false,
-        "tiene_datos_sensibles": true/false,
-        "tipo_ticket": "CORRECTIVO|EVOLUTIVO|OTRO",
-        "prioridad_ticket": "BAJA|MEDIA|ALTA|CRITICA",
-        "recomendaciones": "texto corto en español dirigido al account manager, máximo 3 oraciones"
-    }
-    `.trim();
+        ${JSON.stringify(reglasPalabras, null, 2)}
+
+        INSTRUCCIONES PARA USAR ESTAS LISTAS:
+            - Úsalas como SEÑALES: si aparecen, pueden indicar sentimiento negativo, urgencia, phishing, datos sensibles, etc.
+            - PERO la decisión final siempre debe basarse en el significado global del texto.  
+        Por ejemplo, si aparece una palabra negativa dentro de un contexto positivo o irónico, no marques el ticket como totalmente negativo si no corresponde.
+            - No marques "es_potencial_phishing" en true solo por ver "https://". Debe haber indicios claros de intento de fraude o captura de credenciales.
+            - No marques "tiene_datos_sensibles" en true a menos que el texto realmente incluya credenciales, contraseñas o datos similares.
+            - Si no hay suficiente evidencia, usa valores neutrales o conservadores (por ejemplo: "NEUTRO", "BAJA", "BAJO", score_churn alrededor de 20–30).
+
+        REGLAS IMPORTANTES:
+            - Responde SOLO con un JSON válido, sin texto antes ni después.
+            - No incluyas comentarios ni bloques de código.
+            - "score_churn" debe ser siempre un número entre 0 y 100 (sin comillas).
+        `.trim();
 
     const userContent = `
-        Texto del ticket:
+        Analiza el siguiente ticket y devuelve SOLO el JSON con la estructura indicada.
+
+        TEXTO DEL TICKET:
         """
-        ${descripcion}
+            ${descripcion}
         """
 
-        Contexto adicional (puede estar vacío):
-        ${JSON.stringify(contexto || {}, null, 2)}
+        CONTEXTO ADICIONAL DEL CLIENTE:
+        En la siguiente informacion viene el nombre de la empresa cliente, la fecha de inicio de la relacion comercial y el total de contratos activos que tiene con nosotros. 
+        Basando en esta informacion, ajusta tu analisis si es necesario, y evita falsos positivos en la deteccion de riesgo de churn o frustracion.
+        Asi mismo, si el cliente tiene una relacion larga y muchos contratos, considera esto para reducir el score de churn si el ticket no es muy grave.
+        ${JSON.stringify(contextoCliente || {}, null, 2)}
 
-        Recuerda: responde SOLO con el JSON, sin texto ni explicaciones adicionales.
+        Recuerda:
+            - Usa las listas de palabras clave como referencia, pero prioriza el sentido global del texto.
+            - No expliques nada.
+            - No añadas comentarios.
+            - No uses bloques de código.
+            - Devuelve únicamente el JSON final.
     `.trim();
 
     const prompt = `${systemPrompt}\n\n-------------------------\n\n${userContent}`;
 
     const result = await model.generateContent(prompt);
-    const rawText = (await result.response.text()).trim();
-
-    const cleaned = limpiarPosiblesCodeFences(rawText);
+    const rawText = (await result.response.text())?.trim() ?? "";
 
     let json: AnalisisIAResult;
+
     try {
+        const cleaned = extraerJsonDeRespuesta(rawText);
         json = JSON.parse(cleaned);
     } catch (error) {
-        console.error("❌ No se pudo parsear JSON desde Gemini. Contenido bruto:");
-        console.error(rawText);
+        console.error("❌ No se pudo parsear JSON desde Gemini.");
+        console.error("➡️ Error:", (error as Error).message);
+        console.error("➡️ Respuesta cruda de Gemini:\n", rawText);
         throw new Error("La respuesta de Gemini no fue un JSON válido");
     }
 
@@ -92,167 +109,29 @@ export async function analizarTextoTicketConIA(descripcion: string, contexto?: {
     return json;
 }
 
-/**
- * Fallback local basado en reglas simples de palabras clave.
- * Útil cuando Gemini falla (sin cuota, sin API key, etc.).
- */
-export function analizarTextoTicketFallback(descripcion: string): AnalisisIAResult {
-    const texto = descripcion.toLowerCase();
-
-    const palabrasNegativas = [
-        "molesto",
-        "inaceptable",
-        "decepcionado",
-        "indignado",
-        "frustrado",
-        "urgente",
-        "crítico",
-        "critica",
-        "caído",
-        "caido",
-        "no funciona",
-        "no ha funcionado",
-        "sigue igual",
-        "perdiendo dinero",
-        "llevo esperando",
-        "muy demorado",
-        "muy lento"
-    ];
-
-    const palabrasPositivas = [
-        "gracias",
-        "agradezco",
-        "excelente",
-        "muy buen",
-        "funciona bien",
-        "satisfecho",
-        "satisfechos",
-        "felicitaciones"
-    ];
-
-    let scorePositivo = 0;
-    let scoreNegativo = 0;
-
-    for (const p of palabrasPositivas) {
-        if (texto.includes(p)) scorePositivo++;
-    }
-    for (const p of palabrasNegativas) {
-        if (texto.includes(p)) scoreNegativo++;
+function extraerJsonDeRespuesta(text: string): string {
+    if (!text) {
+        throw new Error("Respuesta vacía de Gemini");
     }
 
-    let sentimiento: "POSITIVO" | "NEUTRO" | "NEGATIVO" = "NEUTRO";
-    if (scoreNegativo > scorePositivo && scoreNegativo > 0) {
-        sentimiento = "NEGATIVO";
-    } else if (scorePositivo > scoreNegativo && scorePositivo > 0) {
-        sentimiento = "POSITIVO";
-    }
-
-    let frustracion: "BAJA" | "MEDIA" | "ALTA" = "BAJA";
-    if (sentimiento === "NEGATIVO" && texto.includes("inaceptable")) {
-        frustracion = "ALTA";
-    } else if (sentimiento === "NEGATIVO") {
-        frustracion = "MEDIA";
-    }
-
-    const es_potencial_phishing =
-        texto.includes("http://") ||
-        texto.includes("https://") ||
-        texto.includes("verificar cuenta") ||
-        texto.includes("actualizar su cuenta") ||
-        texto.includes("bloqueo de su cuenta");
-
-    const tiene_datos_sensibles =
-        texto.includes("usuario") ||
-        texto.includes("contraseña") ||
-        texto.includes("password") ||
-        texto.includes("clave") ||
-        texto.includes("número de tarjeta") ||
-        texto.includes("tarjeta de crédito");
-
-    // Score de churn simple
-    let score_churn = 20;
-    if (sentimiento === "NEGATIVO") score_churn += 40;
-    if (frustracion === "MEDIA") score_churn += 20;
-    if (frustracion === "ALTA") score_churn += 35;
-    if (es_potencial_phishing) score_churn += 5;
-    if (tiene_datos_sensibles) score_churn += 5;
-    if (texto.includes("cancelar el contrato") || texto.includes("buscaremos otro proveedor")) {
-        score_churn += 30;
-    }
-    if (score_churn > 100) score_churn = 100;
-
-    let riesgo_churn: "BAJO" | "MEDIO" | "ALTO" = "BAJO";
-    if (score_churn >= 70) riesgo_churn = "ALTO";
-    else if (score_churn >= 40) riesgo_churn = "MEDIO";
-
-    let prioridad_ticket: "BAJA" | "MEDIA" | "ALTA" | "CRITICA" = "MEDIA";
-    if (
-        texto.includes("caído") ||
-        texto.includes("caido") ||
-        texto.includes("no funciona") ||
-        texto.includes("perdiendo dinero") ||
-        texto.includes("no podemos operar")
-    ) {
-        prioridad_ticket = "CRITICA";
-    } else if (texto.includes("urgente") || texto.includes("lo antes posible")) {
-        prioridad_ticket = "ALTA";
-    }
-
-    let tipo_ticket: "CORRECTIVO" | "EVOLUTIVO" | "OTRO" = "CORRECTIVO";
-    if (
-        texto.includes("mejora") ||
-        texto.includes("ajuste") ||
-        texto.includes("nueva funcionalidad") ||
-        texto.includes("nueva característica")
-    ) {
-        tipo_ticket = "EVOLUTIVO";
-    }
-
-    let recomendaciones = "Analizado con motor de reglas local (fallback). ";
-    if (riesgo_churn === "ALTO") {
-        recomendaciones +=
-            "Contactar al cliente en las próximas 24 horas y priorizar la resolución del incidente.";
-    } else if (riesgo_churn === "MEDIO") {
-        recomendaciones +=
-            "Hacer seguimiento al ticket y mantener informado al cliente del avance de la solución.";
-    } else {
-        recomendaciones +=
-            "Mantener el nivel de servicio actual y reforzar la comunicación positiva con el cliente.";
-    }
-
-    if (es_potencial_phishing) {
-        recomendaciones += " ⚠️ Posible caso de phishing, escalar al equipo de seguridad.";
-    }
-    if (tiene_datos_sensibles) {
-        recomendaciones +=
-            " ⚠️ El ticket incluye posibles credenciales o datos sensibles, solicitar al cliente que los elimine del mensaje.";
-    }
-
-    return {
-        sentimiento,
-        frustracion,
-        score_churn,
-        riesgo_churn,
-        es_potencial_phishing,
-        tiene_datos_sensibles,
-        tipo_ticket,
-        prioridad_ticket,
-        recomendaciones
-    };
-}
-
-/**
- * Utilidad para limpiar ```json ... ``` si el modelo lo devuelve así.
- */
-function limpiarPosiblesCodeFences(text: string): string {
     let cleaned = text.trim();
 
-    if (cleaned.startsWith("```")) {
-        // Eliminar la primera línea ```json o ``` 
-        cleaned = cleaned.replace(/^```[a-zA-Z]*\s*/, "");
-        // Eliminar el bloque final ```
-        cleaned = cleaned.replace(/```$/, "").trim();
+    // 1. Eliminar posibles fences tipo ```json, ```JSON, ``` etc.
+    cleaned = cleaned
+        .replace(/```json/gi, "```")
+        .replace(/```/g, "")
+        .trim();
+
+    // 2. Buscar el primer "{" y el último "}" para quedarnos solo con el objeto JSON
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+
+    if (start === -1 || end === -1 || end <= start) {
+        throw new Error("No se encontró un objeto JSON válido entre llaves");
     }
 
-    return cleaned;
+    const soloJson = cleaned.substring(start, end + 1).trim();
+
+    return soloJson;
 }
+

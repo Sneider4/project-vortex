@@ -2,8 +2,32 @@
 import { Request, Response } from 'express';
 import {
     createTicketWithAnalysis,
-    listTicketsWithAnalysis
+    listTicketsWithAnalysis,
+    obtenerDetalleTicket
 } from '../services/ticket.service';
+
+export async function getDetalleTicketHandler(req: Request, res: Response) {
+    try {
+        const id = Number(req.params.id);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ message: 'id de ticket inválido' });
+        }
+
+        const data = await obtenerDetalleTicket(id);
+
+        if (!data) {
+            return res.status(404).json({ message: 'Ticket no encontrado' });
+        }
+
+        return res.json(data);
+    } catch (error) {
+        console.error('Error obteniendo detalle del ticket:', error);
+        return res.status(500).json({
+            message: 'Error interno al obtener detalle del ticket'
+        });
+    }
+}
 
 export async function crearTicketHandler(req: Request, res: Response) {
     try {

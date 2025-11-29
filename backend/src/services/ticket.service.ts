@@ -1,29 +1,122 @@
 // src/services/ticket.service.ts
+//cSpell:disable
 import { pool } from '../db/pool';
 import { AnalisisIAResult } from '../models/ia.models';
-import { AnalisisRow, CreateTicketDTO, TicketRow, TicketWithAnalysis } from '../models/ticket.model';
+import {
+    AnalisisRow,
+    CreateTicketDTO,
+    TicketRow,
+    TicketWithAnalysis
+} from '../models/ticket.model';
 import { analizarTextoTicketConIA } from './ia.service';
+import { preprocesarTextoTicket } from '../utils/text-security.util';
 
+export async function obtenerDetalleTicket(idTicket: number): Promise<any | null> {
+    const query = `
+        SELECT
+            t.id_ticket,
+            t.id_contrato,
+            t.titulo,
+            t.descripcion,
+            t.tipo,
+            t.prioridad,
+            t.estado,
+            t.fecha_creacion,
+            t.fecha_cierre,
 
-export async function createTicketWithAnalysis(
-    data: CreateTicketDTO
-): Promise<{ ticket: TicketRow; analisis: AnalisisRow }> {
+            a.id_analisis,
+            a.sentimiento,
+            a.frustracion,
+            a.es_potencial_phishing,
+            a.tiene_datos_sensibles,
+            a.recomendaciones,
+            a.fecha_analisis,
+            a.score_churn,
+            a.riesgo_churn
+
+        FROM tickets t
+        LEFT JOIN analisis_ticket a
+        ON a.id_ticket = t.id_ticket
+        WHERE t.id_ticket = $1;
+    `;
+
+    const result = await pool.query<any>(query, [idTicket]);
+    console.log(result);
+    return result.rows[0] ?? null;
+}
+
+export async function createTicketWithAnalysis(data: CreateTicketDTO): Promise<{
+    ticket: TicketRow; analisis: AnalisisRow;
+    contextoCliente: {
+        nombre: string;
+        fecha_inicio_relacion: Date;
+        total_contratos: number;
+    };
+}> {
+    const pre = preprocesarTextoTicket(data.descripcion);
+
+    const estadoInicial = pre.esPhishingSospechoso
+        ? 'BLOQUEADO_POR_SEGURIDAD'
+        : 'ENTREGADO';
+
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
 
+        const clienteInfoQuery = `
+            SELECT
+                c.id_cliente,
+                cli.nombre,
+                cli.fecha_inicio_relacion,
+                (
+                SELECT COUNT(*)
+                FROM contratos c2
+                WHERE c2.id_cliente = c.id_cliente
+                ) AS total_contratos
+            FROM contratos c
+            INNER JOIN clientes cli ON cli.id_cliente = c.id_cliente
+            WHERE c.id_contrato = $1
+            LIMIT 1
+        `;
+
+        const clienteInfoResult = await client.query(clienteInfoQuery, [
+            data.id_contrato
+        ]);
+
+        if (clienteInfoResult.rows.length === 0) {
+            throw new Error(
+                `No se encontró cliente asociado al contrato ${data.id_contrato}`
+            );
+        }
+
+        const clienteRow = clienteInfoResult.rows[0] as {
+            nombre: string;
+            fecha_inicio_relacion: Date;
+            total_contratos: number;
+        };
+
+        const contextoCliente = {
+            nombre: clienteRow.nombre,
+            fecha_inicio_relacion: clienteRow.fecha_inicio_relacion,
+            total_contratos: Number(clienteRow.total_contratos)
+        };
+
         const insertTicketQuery = `
             INSERT INTO tickets (
-                id_contrato, titulo, descripcion
-            ) VALUES ($1, $2, $3)
+                id_contrato,
+                titulo,
+                descripcion,
+                estado
+            ) VALUES ($1, $2, $3, $4)
             RETURNING *
         `;
 
         const ticketResult = await client.query<TicketRow>(insertTicketQuery, [
             data.id_contrato,
             data.titulo,
-            data.descripcion
+            data.descripcion,
+            estadoInicial
         ]);
 
         const ticket = ticketResult.rows[0];
@@ -31,12 +124,25 @@ export async function createTicketWithAnalysis(
         let analisisIA: AnalisisIAResult;
 
         try {
-            analisisIA = await analizarTextoTicketConIA(ticket.descripcion, {});
+            analisisIA = await analizarTextoTicketConIA(pre.textoAnonimizado, {
+                nombre_cliente: contextoCliente.nombre,
+                fecha_inicio_relacion: contextoCliente.fecha_inicio_relacion,
+                total_contratos_cliente: contextoCliente.total_contratos
+            });
+            console.log('✅ Análisis IA completado para ticket ID:', contextoCliente);
         } catch (error) {
-            console.error("❌ Error llamando a Gemini, usando fallback local:", error);
-            analisisIA = analizarTextoTicketFallback(ticket.descripcion);
+            console.error('||||||| Error llamando a Gemini, usando fallback local:', error);
+            analisisIA = analizarTextoTicketFallback(pre.textoAnonimizado);
         }
 
+        // 5. Combinar flags de seguridad locales con los de la IA
+        analisisIA.tiene_datos_sensibles =
+            analisisIA.tiene_datos_sensibles || pre.tieneDatosSensibles;
+
+        analisisIA.es_potencial_phishing =
+            analisisIA.es_potencial_phishing || pre.esPhishingSospechoso;
+
+        // 6. Guardar análisis
         const insertAnalisisQuery = `
             INSERT INTO analisis_ticket (
                 id_ticket,
@@ -67,7 +173,6 @@ export async function createTicketWithAnalysis(
 
         const analisisRow = analisisResult.rows[0];
 
-        //Actualiza tipo y prioridad en la tabla tickets según IA
         const updateTicketMetaQuery = `
             UPDATE tickets
             SET tipo = $1,
@@ -75,18 +180,19 @@ export async function createTicketWithAnalysis(
             WHERE id_ticket = $3
             RETURNING *
         `;
-        const updatedTicketResult = await client.query<TicketRow>(updateTicketMetaQuery, [
-            analisisIA.tipo_ticket,
-            analisisIA.prioridad_ticket,
-            ticket.id_ticket
-        ]);
+        const updatedTicketResult = await client.query<TicketRow>(
+            updateTicketMetaQuery,
+            [analisisIA.tipo_ticket, analisisIA.prioridad_ticket, ticket.id_ticket]
+        );
 
         const updatedTicket = updatedTicketResult.rows[0];
+
         await client.query('COMMIT');
 
         return {
             ticket: updatedTicket,
-            analisis: analisisRow
+            analisis: analisisRow,
+            contextoCliente
         };
     } catch (error) {
         await client.query('ROLLBACK');
@@ -96,6 +202,7 @@ export async function createTicketWithAnalysis(
         client.release();
     }
 }
+
 
 export async function listTicketsWithAnalysis(): Promise<TicketWithAnalysis[]> {
     const query = `
@@ -127,11 +234,15 @@ export async function listTicketsWithAnalysis(): Promise<TicketWithAnalysis[]> {
     const result = await pool.query(query);
 
     const items: TicketWithAnalysis[] = result.rows.map((row: any) => {
+        // 🔹 1. Enmascarar descripción ANTES de enviarla al frontend
+        const pre = preprocesarTextoTicket(row.descripcion);
+
         const ticket: TicketRow = {
             id_ticket: row.id_ticket,
             id_contrato: row.id_contrato,
             titulo: row.titulo,
-            descripcion: row.descripcion,
+            // el frontend SIEMPRE recibe la versión anonimizadaa
+            descripcion: pre.textoAnonimizado,
             tipo: row.tipo,
             prioridad: row.prioridad,
             estado: row.estado,
@@ -149,8 +260,11 @@ export async function listTicketsWithAnalysis(): Promise<TicketWithAnalysis[]> {
                 frustracion: row.frustracion,
                 score_churn: row.score_churn,
                 riesgo_churn: row.riesgo_churn,
-                es_potencial_phishing: row.es_potencial_phishing,
-                tiene_datos_sensibles: row.tiene_datos_sensibles,
+                // combinamos lo de BD con lo que detecta el preprocesador
+                es_potencial_phishing:
+                    row.es_potencial_phishing || pre.esPhishingSospechoso,
+                tiene_datos_sensibles:
+                    row.tiene_datos_sensibles || pre.tieneDatosSensibles,
                 recomendaciones: row.recomendaciones,
                 fecha_analisis: row.fecha_analisis
             };
@@ -254,7 +368,11 @@ function analizarTextoTicketFallback(descripcion: string): AnalisisIAResult {
     }
 
     let tipo_ticket: 'CORRECTIVO' | 'EVOLUTIVO' | 'OTRO' = 'CORRECTIVO';
-    if (texto.includes('mejora') || texto.includes('ajuste') || texto.includes('nueva funcionalidad')) {
+    if (
+        texto.includes('mejora') ||
+        texto.includes('ajuste') ||
+        texto.includes('nueva funcionalidad')
+    ) {
         tipo_ticket = 'EVOLUTIVO';
     }
 
