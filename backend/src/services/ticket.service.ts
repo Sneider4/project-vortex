@@ -2,12 +2,7 @@
 //cSpell:disable
 import { pool } from '../db/pool';
 import { AnalisisIAResult } from '../models/ia.models';
-import {
-    AnalisisRow,
-    CreateTicketDTO,
-    TicketRow,
-    TicketWithAnalysis
-} from '../models/ticket.model';
+import { AnalisisRow, CreateTicketDTO, TicketRow, TicketWithAnalysis } from '../models/ticket.model';
 import { analizarTextoTicketConIA } from './ia.service';
 import { preprocesarTextoTicket } from '../utils/text-security.util';
 
@@ -32,11 +27,19 @@ export async function obtenerDetalleTicket(idTicket: number): Promise<any | null
             a.recomendaciones,
             a.fecha_analisis,
             a.score_churn,
-            a.riesgo_churn
+            a.riesgo_churn,
+            
+            c.nombre_proyecto as nombre_contrato,
+            cli.nombre as nombre_cliente,
+            cli.nit as nit_cliente
 
         FROM tickets t
         LEFT JOIN analisis_ticket a
         ON a.id_ticket = t.id_ticket
+        LEFT JOIN contratos c
+        ON t.id_contrato = c.id_contrato
+        LEFT JOIN clientes cli
+        ON c.id_cliente = cli.id_cliente
         WHERE t.id_ticket = $1;
     `;
 

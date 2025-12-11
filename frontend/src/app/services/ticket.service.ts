@@ -5,25 +5,25 @@ import { map, Observable } from 'rxjs';
 import { CreateTicketRequest, CreateTicketResponse, TicketWithAnalysis } from '../../models/vortex.model';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class TicketService {
-  private baseUrl = `${environment.apiUrl}/tickets`;
+    private baseUrl = `${environment.apiUrl}/tickets`;
 
-  constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient) { }
 
-  crearTicket(data: CreateTicketRequest): Observable<CreateTicketResponse> {
-    return this.http.post<CreateTicketResponse>(`${this.baseUrl}/listadoTicketAnalisis`, data);
-  }
+    crearTicket(data: CreateTicketRequest): Observable<CreateTicketResponse> {
+        return this.http.post<CreateTicketResponse>(`${this.baseUrl}/listadoTicketAnalisis`, data);
+    }
 
-  getTickets(): Observable<TicketWithAnalysis[]> {
-    return this.http.get<{ items: TicketWithAnalysis[] }>(`${this.baseUrl}/listadoTicket`).pipe(
-      // nos quedamos solo con el array items
-      map((resp) => resp.items)
-    );
-  }
+    getTickets(): Observable<TicketWithAnalysis[]> {
+        return this.http.get<{ items: TicketWithAnalysis[] }>(`${this.baseUrl}/listadoTicket`).pipe(
+            // nos quedamos solo con el array items
+            map((resp) => resp.items)
+        );
+    }
 
-  getDetalleTicket(idTicket: number): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/${idTicket}/detalleTicket`);
-  }
+    getDetalleTicket(idTicket: number): Observable<any> {
+        return this.http.get<any>(`${this.baseUrl}/${idTicket}/detalleTicket`);
+    }
 }

@@ -1,166 +1,245 @@
-<!-- Topbar solo móvil para abrir/cerrar el menú (Bootstrap collapse) -->
+<!-- TOPBAR SOLO MÓVIL -->
 <nav class="navbar navbar-light bg-light border-bottom d-lg-none">
-  <div class="container-fluid">
-    <button
-      class="btn btn-outline-secondary"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#sidebarMenu"
-      aria-controls="sidebarMenu"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      ☰
-    </button>
+    <div class="container-fluid">
+        <div class="d-flex gap-3 align-items-center">
+            <!-- Botón abre menú móvil (offcanvas) -->
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Abrir menú">☰</button>
+            @if (!auth.isLoggedIn()) {
+                <button title="Iniciar sesión" type="button" class="btn btn-primary" (click)="goToLogin()"><i class="bi bi-box-arrow-right"></i></button>
+            } @else {
+                <button title="Cerrar sesión" type="button" class="btn btn-outline-danger" (click)="logout()"><i class="bi bi-box-arrow-left"></i></button>
+            }
+        </div>
 
-    <span class="navbar-brand mb-0 h1 ms-2"> Vortex Churn </span>
-  </div>
+        <div class="d-flex gap-2">
+            <p class="navbar-brand fw-bold mb-0 ms-2 fs-3">ClientPulse AI</p>
+        </div>
+    </div>
 </nav>
 
-<div class="app-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
-  <!-- SIDEBAR -->
-  <nav id="sidebarMenu" class="collapse d-lg-block bg-light border-end sidebar">
-    <div class="d-flex flex-column min-vh-100">
-      <!-- Logo / título y botón colapsar (solo escritorio) -->
-      <div
-        class="sidebar-header d-none d-lg-flex align-items-center justify-content-between px-3 py-2 border-bottom"
-      >
-        <span class="fs-4 fw-bold sidebar-logo-text">Vortex</span>
-
-        <button
-          type="button"
-          class="btn btn-sm sidebar-toggle-btn py-1 px-2"
-          (click)="toggleSidebar()"
-          [attr.title]="isSidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'"
-        >
-          <i
-            class="bi"
-            [ngClass]="
-              isSidebarCollapsed
-                ? 'bi bi-arrow-bar-right fs-4'
-                : 'bi bi-arrow-bar-left fs-4'
-            "
-          ></i>
-        </button>
-      </div>
-      @if (isSidebarCollapsed) {
-      <!-- Cuando está colapsado, en escritorio mostramos solo el icono del logo -->
-      <div
-        class="sidebar-header-collapsed d-none d-lg-flex align-items-center justify-content-center border-bottom"
-      >
-        <span class="fs-5 fw-bold">VTX</span>
-      </div>
-      }
-
-      <!-- Links de navegación -->
-      <ul class="nav nav-pills flex-column mb-auto py-2">
-        @if (auth.isLoggedIn()) {
-        <li class="nav-item">
-          <a
-            routerLink="/dashboard"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
-            class="nav-link custom-link d-flex align-items-center gap-3"
-            [attr.title]="isSidebarCollapsed ? 'Dashboard' : null"
-          >
-            <i class="bi bi-speedometer2 sidebar-icon fs-5"></i>
-            <span class="nav-label">Dashboard</span>
-          </a>
-        </li>
-        }
-
-        <li class="nav-item">
-          <a
-            [routerLink]="['/nuevo-ticket']"
-            routerLinkActive="active"
-            class="nav-link custom-link d-flex align-items-center gap-3"
-            [attr.title]="isSidebarCollapsed ? 'Nuevo ticket' : null"
-          >
-            <i class="bi bi-plus-circle sidebar-icon fs-5"></i>
-            <span class="nav-label">Nuevo ticket</span>
-          </a>
-        </li>
-
-        @if (auth.isLoggedIn()) {
-        <li class="nav-item">
-          <a
-            [routerLink]="['/tickets']"
-            routerLinkActive="active"
-            class="nav-link custom-link d-flex align-items-center gap-3"
-            [attr.title]="isSidebarCollapsed ? 'Tickets' : null"
-          >
-            <i class="bi bi-list-check sidebar-icon fs-5"></i>
-            <span class="nav-label">Tickets</span>
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a
-            [routerLink]="['/clientes/nuevo']"
-            routerLinkActive="active"
-            class="nav-link custom-link d-flex align-items-center gap-3"
-            [attr.title]="isSidebarCollapsed ? 'Clientes' : null"
-          >
-            <i class="bi bi-people sidebar-icon fs-5"></i>
-            <span class="nav-label">Clientes</span>
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a
-            [routerLink]="['/contratos/nuevo']"
-            routerLinkActive="active"
-            class="nav-link custom-link d-flex align-items-center gap-3"
-            [attr.title]="isSidebarCollapsed ? 'Contratos' : null"
-          >
-            <i class="bi bi-journal-text sidebar-icon fs-5"></i>
-            <span class="nav-label">Contratos</span>
-          </a>
-        </li>
-        }
-      </ul>
-      <div class="mt-auto d-none d-lg-block">
-        <div class="p-3 border-top">
-          @if (!auth.isLoggedIn()) {
-          <button
-            type="button"
-            class="btn btn-primary w-100"
-            (click)="goToLogin()"
-          >
-            Ingresar
-          </button>
-          } @else {
-          <div class="d-flex flex-column gap-2">
-            <small class="text-muted text-center">Sesión: admin</small>
-            <button
-              type="button"
-              class="btn btn-outline-danger btn-sm w-100"
-              (click)="logout()"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-          }
-        </div>
-
-        <div class="p-3 small text-muted border-top">
-          &copy; {{ currentYear }} Vortex
-        </div>
-      </div>
+<!-- MENÚ MÓVIL (OFFCANVAS) -->
+<div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title fw-bold" id="mobileMenuLabel">ClientPulse AI</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
     </div>
-  </nav>
+    <div class="offcanvas-body d-flex flex-column gap-2">
+        @if (auth.isLoggedIn()) {
+            <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="btn btn-light text-start">
+                <i class="bi bi-speedometer2 me-2"></i>
+                Dashboard
+            </a>
+        }
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <div class="content-wrapper">
-    <!-- Topbar escritorio (opcional) -->
-    <nav class="navbar navbar-light bg-white border-bottom d-none d-lg-block">
-      <div class="container-fluid">
-        <span class="navbar-text"> Panel de análisis </span>
-      </div>
-    </nav>
+        <a [routerLink]="['/nuevo-ticket']" routerLinkActive="active" class="btn btn-light text-start">
+            <i class="bi bi-plus-circle me-2"></i>
+            Nuevo ticket
+        </a>
 
-    <main class="main-container p-3">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
+        @if (auth.isLoggedIn()) {
+            <a [routerLink]="['/tickets']" routerLinkActive="active" class="btn btn-light text-start">
+                <i class="bi bi-list-check me-2"></i>
+                Tickets
+            </a>
+
+            <a [routerLink]="['/clientes/nuevo']" routerLinkActive="active" class="btn btn-light text-start">
+                <i class="bi bi-people me-2"></i>
+                Clientes
+            </a>
+
+            <a [routerLink]="['/contratos/nuevo']" routerLinkActive="active" class="btn btn-light text-start">
+                <i class="bi bi-journal-text me-2"></i>
+                Contratos
+            </a>
+        }
+
+        <div class="mt-3 border-top pt-3">
+            @if (!auth.isLoggedIn()) {
+                <button type="button" class="btn btn-primary w-100" (click)="goToLogin()">Ingresar</button>
+            } @else {
+                <small class="text-muted d-block mb-1">Sesión: admin</small>
+                <button type="button" class="btn btn-outline-danger w-100" (click)="logout()">Cerrar sesión</button>
+            }
+        </div>
+    </div>
 </div>
+
+<!-- TOPBAR SOLO MÓVIL
+<nav class="navbar navbar-light bg-light border-bottom d-lg-none">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <p class="navbar-brand fw-bold mb-0 fs-3">ClientPulse AI</p>
+
+            <div class="d-flex gap-2">
+                @if (!auth.isLoggedIn()) {
+                    <button type="button" class="btn btn-primary btn-sm" (click)="goToLogin()">Ingresar</button>
+                } @else {
+                    <button type="button" class="btn btn-outline-danger btn-sm" (click)="logout()">Cerrar sesión</button>
+                }
+            </div>
+        </div>
+    </div>
+</nav> -->
+
+<!-- BOTTOM NAV MÓVIL TIPO APP
+<nav class="mobile-bottom-bar d-lg-none">
+    <ul class="nav justify-content-around align-items-center w-100">
+        @if (auth.isLoggedIn()) {
+            <li class="nav-item text-center">
+                <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link">
+                    <i class="bi bi-speedometer2 fs-4"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+        }
+
+        <li class="nav-item text-center">
+            <a [routerLink]="['/nuevo-ticket']" routerLinkActive="active" class="mobile-nav-link">
+                <i class="bi bi-plus-circle fs-4"></i>
+                <span>Nuevo</span>
+            </a>
+        </li>
+
+        @if (auth.isLoggedIn()) {
+            <li class="nav-item text-center">
+                <a [routerLink]="['/tickets']" routerLinkActive="active" class="mobile-nav-link">
+                    <i class="bi bi-list-check fs-4"></i>
+                    <span>Tickets</span>
+                </a>
+            </li>
+
+            <li class="nav-item text-center">
+                <a [routerLink]="['/clientes/nuevo']" routerLinkActive="active" class="mobile-nav-link">
+                    <i class="bi bi-people fs-4"></i>
+                    <span>Clientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item text-center">
+                <a [routerLink]="['/contratos/nuevo']" routerLinkActive="active" class="mobile-nav-link">
+                    <i class="bi bi-journal-text fs-4"></i>
+                    <span>Contratos</span>
+                </a>
+            </li>
+        }
+    </ul>
+</nav> -->
+<div class="app-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
+    <!-- SIDEBAR -->
+    <nav id="sidebarMenu" class="collapse d-lg-block bg-light border-end sidebar">
+        <div class="d-flex flex-column min-vh-100">
+            <!-- Logo / título y botón colapsar (solo escritorio) -->
+            <div class="sidebar-header d-none d-lg-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+                <span class="fs-4 fw-bold sidebar-logo-text">ClientPulse AI</span>
+                <button type="button" class="btn btn-sm sidebar-toggle-btn py-1 px-2" (click)="toggleSidebar()" [attr.title]="isSidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'"><i class="bi" [ngClass]="isSidebarCollapsed ? 'bi bi-arrow-bar-right fs-4' : 'bi bi-arrow-bar-left fs-4'"></i></button>
+            </div>
+            @if (isSidebarCollapsed) {
+                <!-- Cuando está colapsado, en escritorio mostramos solo el icono del logo -->
+                <div class="sidebar-header-collapsed d-none d-lg-flex align-items-center justify-content-center border-bottom"><span class="fs-5 fw-bold">C-AI</span></div>
+            }
+            <!-- Links de navegación -->
+            <ul class="nav nav-pills flex-column mb-auto py-2">
+                @if (auth.isLoggedIn()) {
+                    <li class="nav-item">
+                        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link custom-link d-flex align-items-center gap-3" [attr.title]="isSidebarCollapsed ? 'Dashboard' : null">
+                            <i class="bi bi-speedometer2 sidebar-icon fs-5"></i>
+                            <span class="nav-label">Dashboard</span>
+                        </a>
+                    </li>
+                }
+                <li class="nav-item">
+                    <a [routerLink]="['/nuevo-ticket']" routerLinkActive="active" class="nav-link custom-link d-flex align-items-center gap-3" [attr.title]="isSidebarCollapsed ? 'Nuevo ticket' : null">
+                        <i class="bi bi-plus-circle sidebar-icon fs-5"></i>
+                        <span class="nav-label">Nuevo ticket</span>
+                    </a>
+                </li>
+                @if (auth.isLoggedIn()) {
+                    <li class="nav-item">
+                        <a [routerLink]="['/tickets']" routerLinkActive="active" class="nav-link custom-link d-flex align-items-center gap-3" [attr.title]="isSidebarCollapsed ? 'Tickets' : null">
+                            <i class="bi bi-list-check sidebar-icon fs-5"></i>
+                            <span class="nav-label">Tickets</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a [routerLink]="['/clientes/nuevo']" routerLinkActive="active" class="nav-link custom-link d-flex align-items-center gap-3" [attr.title]="isSidebarCollapsed ? 'Clientes' : null">
+                            <i class="bi bi-people sidebar-icon fs-5"></i>
+                            <span class="nav-label">Clientes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a [routerLink]="['/contratos/nuevo']" routerLinkActive="active" class="nav-link custom-link d-flex align-items-center gap-3" [attr.title]="isSidebarCollapsed ? 'Contratos' : null">
+                            <i class="bi bi-journal-text sidebar-icon fs-5"></i>
+                            <span class="nav-label">Contratos</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+            <div class="mt-auto d-none d-lg-block">
+                <div class="p-3 border-top">
+                    @if (!auth.isLoggedIn()) {
+                        <button type="button" class="btn btn-primary w-100" (click)="goToLogin()" [attr.title]="isSidebarCollapsed ? 'Iniciar sesión' : null">
+                            <i class="bi bi-box-arrow-right fs-5" *ngIf="isSidebarCollapsed"></i>
+                            <span *ngIf="!isSidebarCollapsed">Iniciar sesión</span>
+                        </button>
+                    } @else {
+                        <div class="d-flex flex-column gap-2">
+                            <small class="text-muted text-center">Sesión: admin</small>
+                            <button type="button" class="btn btn-outline-danger w-100" (click)="logout()" [attr.title]="isSidebarCollapsed ? 'Cerrar sesión' : null">
+                                <i class="bi bi-box-arrow-left fs-5" *ngIf="isSidebarCollapsed"></i>
+                                <span *ngIf="!isSidebarCollapsed">Cerrar sesión</span>
+                            </button>
+                        </div>
+                    }
+                </div>
+                <div class="p-3 small text-muted border-top text-center">&copy; {{ currentYear }} {{ isSidebarCollapsed ? "C-AI" : "ClientPulse AI" }}</div>
+            </div>
+        </div>
+    </nav>
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="content-wrapper">
+        <main class="main-container p-3"><router-outlet></router-outlet></main>
+    </div>
+</div>
+
+<!-- ESTILOS PARA BOTTOM BAR MÓVIL -->
+<style>
+    .mobile-bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 62px;
+        background: #ffffff;
+        border-top: 1px solid #dcdcdc;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 2000;
+    }
+
+    .mobile-bottom-bar .mobile-nav-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #555;
+        font-size: 11px;
+    }
+
+    .mobile-bottom-bar .mobile-nav-link.active,
+    .mobile-bottom-bar .mobile-nav-link:hover {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+    .mobile-bottom-bar i {
+        line-height: 1;
+    }
+
+    /* Para que el contenido no quede tapado por la bottom bar en móvil */
+    @media (max-width: 991.98px) {
+        .main-container {
+            padding-bottom: 80px;
+        }
+    }
+</style>

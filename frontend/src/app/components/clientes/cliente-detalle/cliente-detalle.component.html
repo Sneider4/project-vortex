@@ -1,195 +1,194 @@
 @if (!loading && data) {
-<div class="container my-4">
-  <!-- Header -->
-  <div class="mb-4">
-    <h1 class="fw-bold mb-1">{{ data.cliente.nombre }}</h1>
-    <p class="text-muted mb-0">
-      Resumen de interacción de soporte, riesgo de churn y tickets recientes.
-    </p>
-  </div>
-
-  <div class="row g-3 mb-4">
-    <div class="col-md-6">
-      <div class="card shadow-sm rounded-4 h-100">
-        <div class="card-body p-4">
-          <h3 class="card-title fw-bold mb-3">Información del cliente</h3>
-          <p class="mb-1">
-            <strong>NIT:</strong> {{ data.cliente.nit || "N/D" }}
-          </p>
-          <p class="mb-1">
-            <strong>Sector:</strong> {{ data.cliente.sector || "N/D" }}
-          </p>
-          <p class="mb-1">
-            <strong>Inicio relación:</strong>
-            {{
-              data.cliente.fecha_inicio_relacion
-                ? (data.cliente.fecha_inicio_relacion | date)
-                : "N/D"
-            }}
-          </p>
-          <p class="mb-0"><strong>Estado:</strong> {{ data.cliente.estado }}</p>
+    <div class="container my-4">
+        <!-- Header -->
+        <div class="mb-4">
+            <h1 class="fw-bold mb-1">{{ data.cliente.nombre }}</h1>
+            <p class="text-muted mb-0">Resumen de interacción de soporte, riesgo de churn y tickets recientes.</p>
         </div>
-      </div>
-    </div>
 
-    <!-- Resumen churn -->
-    <div class="col-md-6">
-      <div class="card rounded-4 shadow-sm h-100">
-        <div class="card-body p-4">
-          <h3 class="card-title fw-bold mb-3">Resumen de churn</h3>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <h3 class="card-title fw-bold mb-3">Información del cliente</h3>
+                        <p class="mb-1">
+                            <strong>NIT:</strong>
+                            {{ data.cliente.nit || "N/D" }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Sector:</strong>
+                            {{ data.cliente.sector || "N/D" }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Inicio relación:</strong>
+                            {{ data.cliente.fecha_inicio_relacion ? (data.cliente.fecha_inicio_relacion | date) : "N/D" }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Estado:</strong>
+                            {{ data.cliente.estado }}
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-          <p class="mb-1">
-            <strong>Total tickets:</strong> {{ data.resumen.total_tickets }}
-          </p>
-          <p class="mb-1">
-            <strong>Score promedio:</strong>
-            {{ data.resumen.promedio_score_churn | number : "1.0-1" }}
-          </p>
-          <p class="mb-3 d-flex align-items-center gap-2">
-            <strong>Riesgo predominante:</strong>
-            <span
-              class="badge"
-              [ngClass]="{
-                'text-bg-danger': data.resumen.riesgo_predominante === 'ALTO',
-                'text-bg-warning': data.resumen.riesgo_predominante === 'MEDIO',
-                'text-bg-success': data.resumen.riesgo_predominante === 'BAJO',
-                'text-bg-secondary': !data.resumen.riesgo_predominante
-              }"
-            >
-              {{ data.resumen.riesgo_predominante || "N/D" }}
-            </span>
-          </p>
+            <!-- Resumen churn -->
+            <div class="col-md-6">
+                <div class="card rounded-4 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <h3 class="card-title fw-bold mb-3">Resumen de churn</h3>
 
-          <ul class="list-unstyled mb-0">
-            <li class="d-flex justify-content-between align-items-center mb-1">
-              <span class="badge text-bg-danger">ALTO</span>
-              <span class="fw-semibold">
-                {{ getCantidadPorRiesgo("ALTO") }}
-              </span>
-            </li>
-            <li class="d-flex justify-content-between align-items-center mb-1">
-              <span class="badge text-bg-warning">MEDIO</span>
-              <span class="fw-semibold">
-                {{ getCantidadPorRiesgo("MEDIO") }}
-              </span>
-            </li>
-            <li class="d-flex justify-content-between align-items-center mb-1">
-              <span class="badge text-bg-success">BAJO</span>
-              <span class="fw-semibold">
-                {{ getCantidadPorRiesgo("BAJO") }}
-              </span>
-            </li>
-            <li class="d-flex justify-content-between align-items-center">
-              <span class="badge text-bg-secondary">N/D</span>
-              <span class="fw-semibold">
-                {{ getCantidadPorRiesgo("N/D") }}
-              </span>
-            </li>
-          </ul>
+                        <p class="mb-1">
+                            <strong>Total tickets:</strong>
+                            {{ data.resumen.total_tickets }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Score promedio:</strong>
+                            {{ data.resumen.promedio_score_churn | number: "1.0-1" }}
+                        </p>
+                        <p class="mb-3 d-flex align-items-center gap-2">
+                            <strong>Riesgo predominante:</strong>
+                            <span
+                                class="badge"
+                                [ngClass]="{
+                                    'text-bg-danger': data.resumen.riesgo_predominante === 'ALTO',
+                                    'text-bg-warning': data.resumen.riesgo_predominante === 'MEDIO',
+                                    'text-bg-success': data.resumen.riesgo_predominante === 'BAJO',
+                                    'text-bg-secondary': !data.resumen.riesgo_predominante,
+                                }"
+                            >
+                                {{ data.resumen.riesgo_predominante || "N/D" }}
+                            </span>
+                        </p>
+
+                        <ul class="list-unstyled mb-0">
+                            <li class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge text-bg-danger">ALTO</span>
+                                <span class="fw-semibold">
+                                    {{ getCantidadPorRiesgo("ALTO") }}
+                                </span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge text-bg-warning">MEDIO</span>
+                                <span class="fw-semibold">
+                                    {{ getCantidadPorRiesgo("MEDIO") }}
+                                </span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge text-bg-success">BAJO</span>
+                                <span class="fw-semibold">
+                                    {{ getCantidadPorRiesgo("BAJO") }}
+                                </span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center">
+                                <span class="badge text-bg-secondary">N/D</span>
+                                <span class="fw-semibold">
+                                    {{ getCantidadPorRiesgo("N/D") }}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  @if (data.contratos.length > 0) {
-  <div class="mb-4">
-    <h3 class="fw-bold mb-3">Contratos</h3>
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Proyecto</th>
-            <th>Inicio</th>
-            <th>Fin</th>
-            <th>Estado</th>
-            <th>Nivel servicio</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (ct of data.contratos; track $index) {
-          <tr>
-            <td>{{ ct.nombre_proyecto }}</td>
-            <td>{{ formateadorFecha(ct.fecha_inicio) }}</td>
-            <td>{{ formateadorFecha(ct.fecha_fin) }}</td>
-            <td>{{ ct.estado }}</td>
-            <td>{{ ct.nivel_servicio || "N/D" }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-  } @else {
-  <div class="col-12 text-center mb-5">
-    <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px"
-      >El cliente aun no tiene ningún contrato</small
-    >
-  </div>
-  }
+        <div class="mb-4">
+            <h3 class="fw-bold mb-3">Contratos</h3>
+            @if (data.contratos.length > 0) {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID Contrato</th>
+                                <th>Proyecto</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Estado</th>
+                                <th>Nivel servicio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (ct of data.contratos; track $index) {
+                                <tr>
+                                    <td class="text-center">{{ ct.id_contrato }}</td>
+                                    <td>{{ ct.nombre_proyecto }}</td>
+                                    <td>{{ formateadorFecha(ct.fecha_inicio) }}</td>
+                                    <td>{{ formateadorFecha(ct.fecha_fin) }}</td>
+                                    <td>{{ ct.estado }}</td>
+                                    <td class="text-center">{{ ct.nivel_servicio || "N/D" }}</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            } @else {
+                <div class="col-12 text-center mb-5">
+                    <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px">El cliente aun no tiene ningún contrato</small>
+                </div>
+            }
+        </div>
 
-  <!-- Tickets recientes -->
-  <div class="mb-2">
-    <h3 class="fw-bold mb-3">Tickets recientes</h3>
+        <!-- Tickets recientes -->
+        <div class="mb-2">
+            <h3 class="fw-bold mb-3">Tickets recientes</h3>
 
-    @if (data.tickets_recientes.length > 0) {
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>ID</th>
-            <th>Título</th>
-            <th>Prioridad</th>
-            <th>Estado</th>
-            <th>Sentimiento</th>
-            <th>Riesgo</th>
-            <th>Score</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (t of data.tickets_recientes; track t.id_ticket) {
-          <tr>
-            <td>{{ t.id_ticket }}</td>
-            <td
-              class="fw-semibold"
-              [routerLink]="['/detalle-ticket', t.id_ticket]"
-              style="cursor: pointer"
-            >
-              {{ t.titulo }}
-            </td>
-            <td>{{ t.prioridad }}</td>
-            <td>{{ t.estado }}</td>
-            <td>{{ t.sentimiento || "N/D" }}</td>
-            <td>{{ t.riesgo_churn || "N/D" }}</td>
-            <td>{{ t.score_churn ?? "-" }}</td>
-            <td>{{ t.fecha_creacion | date : "short" }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
+            @if (data.tickets_recientes.length > 0) {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Contrato</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Sentimiento</th>
+                                <th>Riesgo</th>
+                                <th>Score</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (t of data.tickets_recientes; track t.id_ticket) {
+                                <tr>
+                                    <td>{{ t.id_ticket }}</td>
+                                    <td class="fw-semibold" [routerLink]="['/detalle-ticket', t.id_ticket]" style="cursor: pointer">
+                                        {{ t.titulo }}
+                                    </td>
+                                    <td>{{ t.id_contrato }} - {{ t.nombre_proyecto }}</td>
+                                    <td>{{ t.prioridad }}</td>
+                                    <td>{{ t.estado }}</td>
+                                    <td>{{ t.sentimiento || "N/D" }}</td>
+                                    <td>{{ t.riesgo_churn || "N/D" }}</td>
+                                    <td>{{ t.score_churn ?? "-" }}</td>
+                                    <td>{{ t.fecha_creacion | date: "short" }}</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            } @else {
+                <div class="col-12 text-center mb-5">
+                    <div class="d-flex flex-column align-items-center">
+                        <i class="bi bi-hand-thumbs-up fs-1" style="color: rgb(124, 124, 124)"></i>
+                        <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px">Este cliente aun no tiene tickets registrados</small>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="mt-3">
+            <button class="btn btn-outline-secondary" (click)="goBack()">Volver al dashboard</button>
+        </div>
     </div>
-    } @else {
-    <div class="col-12 text-center mb-5">
-      <small class="fw-bold" style="color: rgb(124, 124, 124); font-size: 25px"
-        >Este cliente aun no tiene tickets registrados</small
-      >
+}
+@if (loading) {
+    <div class="container my-3">
+        <div class="alert alert-info mb-0">Cargando detalle del cliente...</div>
     </div>
-    }
-  </div>
-  <div class="mt-3">
-    <button class="btn btn-outline-secondary" (click)="goBack()">
-      Volver al dashboard
-    </button>
-  </div>
-</div>
-} @if (loading) {
-<div class="container my-3">
-  <div class="alert alert-info mb-0">Cargando detalle del cliente...</div>
-</div>
-} @if (errorMessage) {
-<div class="container my-3">
-  <div class="alert alert-danger mb-0">
-    {{ errorMessage }}
-  </div>
-</div>
+}
+@if (errorMessage) {
+    <div class="container my-3">
+        <div class="alert alert-danger mb-0">
+            {{ errorMessage }}
+        </div>
+    </div>
 }

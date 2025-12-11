@@ -1,10 +1,6 @@
 // src/controllers/ticket.controller.ts
 import { Request, Response } from 'express';
-import {
-    createTicketWithAnalysis,
-    listTicketsWithAnalysis,
-    obtenerDetalleTicket
-} from '../services/ticket.service';
+import { createTicketWithAnalysis, listTicketsWithAnalysis, obtenerDetalleTicket} from '../services/ticket.service';
 
 export async function getDetalleTicketHandler(req: Request, res: Response) {
     try {

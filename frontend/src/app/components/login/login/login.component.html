@@ -1,51 +1,56 @@
-<div class="container my-5 d-flex justify-content-center">
-  <div class="card shadow-sm" style="max-width: 400px; width: 100%;">
-    <div class="card-body">
-      <h1 class="h4 fw-bold mb-3 text-center">Iniciar sesión</h1>
-      <p class="text-muted small text-center mb-4">
-        Ingresa con tus credenciales para acceder al panel completo.
-      </p>
+<div class="container-fluid d-flex align-items-center justify-content-center bg-light mt-5">
+    <div class="card shadow-lg" style="max-width: 900px; width: 100%">
+        <div class="row g-0">
+            <div class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center p-5 text-white" style="background: linear-gradient(135deg, #8a9094 0%, #000000 100%); border-radius: 0.5rem 0 0 0.5rem">
+                <i class="bi bi-box-seam display-1 mb-3"></i>
+                <h2 class="fw-bold mb-3">Bienvenido a ClientPulse AI</h2>
+                <p class="text-center opacity-75">Accede a todas las herramientas y recursos que hemos preparado para gestionar tu negocio.</p>
+            </div>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <div class="mb-3">
-          <label for="username" class="form-label">Usuario</label>
-          <input
-            id="username"
-            type="text"
-            class="form-control"
-            formControlName="username"
-            placeholder="admin"
-          />
+            <div class="col-md-6 p-5">
+                <div class="text-center mb-4">
+                    <h1 class="h3 fw-bold mb-1">Iniciar Sesión</h1>
+                    <p class="text-muted small">Ingresa tus credenciales para continuar.</p>
+                </div>
+
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-semibold">Usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input id="username" type="text" class="form-control" formControlName="username" placeholder="admin" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input id="password" type="password" class="form-control" formControlName="password" placeholder="1234" required />
+                        </div>
+                    </div>
+
+                    @if (errorMessage) {
+                        <div class="alert alert-danger py-2 small" role="alert">
+                            {{ errorMessage }}
+                        </div>
+                    }
+
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">Ingresar</button>
+
+                    <hr class="my-4" />
+
+                    <div class="text-center small">
+                        <p class="text-muted mb-1">Credenciales de prueba:</p>
+                        <p class="mb-0">
+                            Usuario:
+                            <strong>admin</strong>
+                            | Contraseña:
+                            <strong>1234</strong>
+                        </p>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="mb-3">
-          <label for="password" class="form-label">Contraseña</label>
-          <input
-            id="password"
-            type="password"
-            class="form-control"
-            formControlName="password"
-            placeholder="1234"
-          />
-        </div>
-
-        @if (errorMessage) {
-          <div class="alert alert-danger py-2 small">
-            {{ errorMessage }}
-          </div>
-        }
-
-        <button
-          type="submit"
-          class="btn btn-primary w-100 mt-2"
-        >
-          Ingresar
-        </button>
-
-        <p class="text-muted small mt-3 mb-0 text-center">
-          Usuario de prueba: <strong>admin</strong> – Contraseña: <strong>1234</strong>
-        </p>
-      </form>
     </div>
-  </div>
 </div>

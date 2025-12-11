@@ -6,105 +6,104 @@ import moment from 'moment';
 import { NgClass } from '@angular/common';
 
 @Component({
-  selector: 'app-detalle-ticket',
-  imports: [NgClass],
-  templateUrl: './detalle-ticket.component.html',
-  styleUrl: './detalle-ticket.component.scss'
+    selector: 'app-detalle-ticket',
+    imports: [NgClass],
+    templateUrl: './detalle-ticket.component.html',
+    styleUrl: './detalle-ticket.component.scss'
 })
-export class DetalleTicketComponent implements OnInit  {
+export class DetalleTicketComponent implements OnInit {
 
-  ticketId!: number;
-  data: any = null;
-  loading = false;
-  errorMessage = '';
+    ticketId!: number;
+    data: any = null;
+    loading = false;
+    errorMessage = '';
 
-  private subscriptions: Subscription = new Subscription();
+    private subscriptions: Subscription = new Subscription();
 
-  private route = inject(ActivatedRoute)
-  private ticketService = inject(TicketService)
+    private route = inject(ActivatedRoute)
+    private ticketService = inject(TicketService)
 
-  constructor() { }
+    constructor() { }
 
-  ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
-      const id = Number(params.get('id'));
-      if (!Number.isNaN(id)) {
-        this.ticketId = id;
-        this.cargarDetalleTicket();
-      } else {
-        this.errorMessage = 'ID de cliente inválido';
-      }
-    });
-  }
-
-  cargarDetalleTicket() {
-    console.log("Cargando detalle del ticket con ID:", this.ticketId);
-    const resumen = this.ticketService.getDetalleTicket(this.ticketId).pipe(
-      tap((data) => {
-        this.loading = false;
-        this.data = data;
-        console.log(data);
-      }),
-      catchError((error) => {
-        this.loading = false;
-        console.error(error);
-        this.errorMessage =
-          error?.error?.message || 'Error al cargar el detalle del cliente';
-        throw error;
-      }),
-    ).subscribe();
-    this.subscriptions.add(resumen);
-  }
-
-  getPrioridadClass(prioridad: string | null | undefined): string {
-    const p = (prioridad || '').toUpperCase();
-    switch (p) {
-      case 'CRITICA':
-      case 'CRÍTICA':
-        return 'text-bg-danger';
-      case 'ALTA':
-        return 'text-bg-danger';
-      case 'MEDIA':
-        return 'text-bg-warning text-dark';
-      case 'BAJA':
-        return 'text-bg-success';
-      default:
-        return 'text-bg-secondary';
+    ngOnInit(): void {
+        this.route.paramMap.subscribe((params) => {
+            const id = Number(params.get('id'));
+            if (!Number.isNaN(id)) {
+                this.ticketId = id;
+                this.cargarDetalleTicket();
+            } else {
+                this.errorMessage = 'ID de cliente inválido';
+            }
+        });
     }
-  }
 
-  getSentimientoClass(sentimiento: string | null | undefined): string {
-    switch (sentimiento) {
-      case 'POSITIVO':
-        return 'text-bg-success';
-      case 'NEUTRO':
-        return 'text-bg-secondary';
-      case 'NEGATIVO':
-        return 'text-bg-danger';
-      default:
-        return 'text-bg-light text-dark';
+    cargarDetalleTicket() {
+        const resumen = this.ticketService.getDetalleTicket(this.ticketId).pipe(
+            tap((data) => {
+                this.loading = false;
+                this.data = data;
+                console.log(data);
+            }),
+            catchError((error) => {
+                this.loading = false;
+                console.error(error);
+                this.errorMessage =
+                    error?.error?.message || 'Error al cargar el detalle del cliente';
+                throw error;
+            }),
+        ).subscribe();
+        this.subscriptions.add(resumen);
     }
-  }
 
-  getRiesgoClass(riesgo: string | null | undefined): string {
-    switch (riesgo) {
-      case 'ALTO':
-        return 'text-bg-danger';
-      case 'MEDIO':
-        return 'text-bg-warning text-dark';
-      case 'BAJO':
-        return 'text-bg-success';
-      default:
-        return 'text-bg-secondary';
+    getPrioridadClass(prioridad: string | null | undefined): string {
+        const p = (prioridad || '').toUpperCase();
+        switch (p) {
+            case 'CRITICA':
+            case 'CRÍTICA':
+                return 'text-bg-danger';
+            case 'ALTA':
+                return 'text-bg-danger';
+            case 'MEDIA':
+                return 'text-bg-warning text-dark';
+            case 'BAJA':
+                return 'text-bg-success';
+            default:
+                return 'text-bg-secondary';
+        }
     }
-  }
 
-  formateadorFecha(fecha: string | null) {
-    moment.locale('es');
-    return moment(fecha).format('dddd, DD [de] MMMM YYYY');
-  }
+    getSentimientoClass(sentimiento: string | null | undefined): string {
+        switch (sentimiento) {
+            case 'POSITIVO':
+                return 'text-bg-success';
+            case 'NEUTRO':
+                return 'text-bg-secondary';
+            case 'NEGATIVO':
+                return 'text-bg-danger';
+            default:
+                return 'text-bg-light text-dark';
+        }
+    }
 
-  goBack(): void {
-    window.history.back();
-  }
+    getRiesgoClass(riesgo: string | null | undefined): string {
+        switch (riesgo) {
+            case 'ALTO':
+                return 'text-bg-danger';
+            case 'MEDIO':
+                return 'text-bg-warning text-dark';
+            case 'BAJO':
+                return 'text-bg-success';
+            default:
+                return 'text-bg-secondary';
+        }
+    }
+
+    formateadorFecha(fecha: string | null) {
+        moment.locale('es');
+        return moment(fecha).format('dddd, DD [de] MMMM YYYY');
+    }
+
+    goBack(): void {
+        window.history.back();
+    }
 }

@@ -113,14 +113,17 @@ export async function listarContratos(): Promise<Contrato[]> {
 export async function listarClientes(): Promise<Cliente[]> {
     const query = `
         SELECT
-            id_cliente,
-            nombre,
-            nit,
-            sector,
-            fecha_inicio_relacion,
-            estado
-        FROM clientes
-        ORDER BY id_cliente DESC
+            cli.id_cliente,
+            cli.nombre,
+            cli.nit,
+            cli.sector,
+            cli.fecha_inicio_relacion,
+            cli.estado,
+            COUNT(ct.id_contrato) AS cantidad_contratos
+        FROM clientes cli
+        LEFT JOIN contratos ct ON ct.id_cliente = cli.id_cliente
+        GROUP BY cli.id_cliente
+        ORDER BY cli.id_cliente DESC
     `;
 
     const result = await pool.query<Cliente>(query);
@@ -189,8 +192,10 @@ export async function getClienteResumen(idCliente: number): Promise<ClienteResum
             AVG(a.score_churn) AS promedio_score_churn,
             MODE() WITHIN GROUP (ORDER BY a.riesgo_churn) AS riesgo_predominante
         FROM contratos ct
-        JOIN tickets t ON t.id_contrato = ct.id_contrato
-        JOIN analisis_ticket a ON a.id_ticket = t.id_ticket
+        JOIN tickets t 
+        ON t.id_contrato = ct.id_contrato
+        JOIN analisis_ticket a 
+        ON a.id_ticket = t.id_ticket
         WHERE ct.id_cliente = $1
     `;
     const resumenResult = await pool.query(resumenQuery, [idCliente]);
@@ -220,6 +225,7 @@ export async function getClienteResumen(idCliente: number): Promise<ClienteResum
     }));
 
     // Últimos tickets con análisis
+    // cSpell:disable
     const ticketsRecientesQuery = `
         SELECT
             t.id_ticket,
@@ -233,14 +239,23 @@ export async function getClienteResumen(idCliente: number): Promise<ClienteResum
             a.score_churn,
             a.riesgo_churn,
             a.es_potencial_phishing,
-            a.tiene_datos_sensibles
+            a.tiene_datos_sensibles,
+            ct.nombre_proyecto,
+            ct.id_contrato
+
         FROM contratos ct
-        JOIN tickets t ON t.id_contrato = ct.id_contrato
-        LEFT JOIN analisis_ticket a ON a.id_ticket = t.id_ticket
+
+        JOIN tickets t 
+        ON t.id_contrato = ct.id_contrato
+
+        LEFT JOIN analisis_ticket a 
+        ON a.id_ticket = t.id_ticket
+
         WHERE ct.id_cliente = $1
         ORDER BY t.fecha_creacion DESC
         LIMIT 20
     `;
+    // cSpell:enable
     const ticketsRecientesResult = await pool.query(ticketsRecientesQuery, [
         idCliente
     ]);
@@ -257,7 +272,10 @@ export async function getClienteResumen(idCliente: number): Promise<ClienteResum
         score_churn: row.score_churn,
         riesgo_churn: row.riesgo_churn,
         es_potencial_phishing: row.es_potencial_phishing,
-        tiene_datos_sensibles: row.tiene_datos_sensibles
+        tiene_datos_sensibles: row.tiene_datos_sensibles,
+        nit: row.nit,
+        nombre_proyecto: row.nombre_proyecto,
+        id_contrato: row.id_contrato,
     }));
 
     return {
